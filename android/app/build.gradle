@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.idswipe.idswipe"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
