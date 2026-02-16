@@ -66,7 +66,7 @@ DO NOT modify:
 Call memory_checkpoint with:
 - session_summary: What was accomplished
 - current_state: "Production AAB built with Stakk branding. All docs and assets ready. Next: Sign up for Play Console ($25), go through 14-day closed testing, then publish."
-- next_todos: Remaining steps for Josep (sign up for Play Console, recruit 20 testers, etc.)
+- next_todos: Remaining steps for Josep (sign up for Play Console, recruit 12 testers, etc.)
 
 Report a final summary of everything completed and what Josep needs to do manually (Play Console signup, testing, etc.)
 

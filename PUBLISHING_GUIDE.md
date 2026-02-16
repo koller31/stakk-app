@@ -11,7 +11,8 @@ Everything you need to publish Stakk on Google Play, organized as step-by-step i
 - **Sign up**: https://play.google.com/console/signup
 - **Identity verification**: Required before you can publish. Takes a few days after submitting documents.
 - **What you need**: Google account, credit/debit card for $25 fee, valid government ID for verification
-- **IMPORTANT for new accounts**: New developer accounts (created after Nov 2023) require **20 testers to opt-in and run the app for 14 consecutive days** before you can publish to production. Plan for this!
+- **IMPORTANT for new personal accounts** (created after Nov 2023): Requires **12 testers to opt-in and run the app for 14 consecutive days** before you can publish to production. Plan for this!
+- **Device verification**: New accounts must verify access to an Android device using the Play Console mobile app
 
 ### 2. Contact Email for Store Listing
 - **Use**: joek331@gmail.com
@@ -233,7 +234,7 @@ The production AAB needs to be built on the master branch with Stakk branding ap
 1. Go to "Testing" > "Closed testing"
 2. Create a new track
 3. Upload the AAB
-4. Add at least 20 testers by email
+4. Add at least 12 testers by email
 5. Testers must opt-in and run the app for **14 consecutive days**
 6. After 14 days, you can promote to production
 
