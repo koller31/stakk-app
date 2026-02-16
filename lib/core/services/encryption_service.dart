@@ -75,15 +75,38 @@ class EncryptionService {
     await output.writeAsBytes(builder.toBytes());
   }
 
-  // Global in-memory cache for decrypted images (path -> bytes).
-  // Avoids re-decrypting every time a widget rebuilds or scrolls into view.
+  // In-memory LRU cache for decrypted images (path -> bytes).
+  // Capped at 50 entries to prevent unbounded memory growth.
+  static const int _maxCacheSize = 50;
   final Map<String, Uint8List> _imageCache = {};
+  final List<String> _cacheOrder = [];
+
+  void _addToCache(String key, Uint8List value) {
+    // If already cached, move to end (most recently used)
+    if (_imageCache.containsKey(key)) {
+      _cacheOrder.remove(key);
+      _cacheOrder.add(key);
+      return;
+    }
+    // Evict oldest entries if at capacity
+    while (_cacheOrder.length >= _maxCacheSize) {
+      final evicted = _cacheOrder.removeAt(0);
+      _imageCache.remove(evicted);
+    }
+    _imageCache[key] = value;
+    _cacheOrder.add(key);
+  }
 
   /// Decrypt a file and return raw bytes. Results are cached in memory.
   Future<Uint8List> decryptFileToBytes(String encryptedPath) async {
     // Return cached if available
     final cached = _imageCache[encryptedPath];
-    if (cached != null) return cached;
+    if (cached != null) {
+      // Move to end of LRU order
+      _cacheOrder.remove(encryptedPath);
+      _cacheOrder.add(encryptedPath);
+      return cached;
+    }
 
     final key = await getOrCreateImageKey();
     final file = File(encryptedPath);
@@ -100,23 +123,28 @@ class EncryptionService {
     );
 
     final bytes = Uint8List.fromList(decrypted);
-    _imageCache[encryptedPath] = bytes;
+    _addToCache(encryptedPath, bytes);
     return bytes;
   }
 
   /// Read a plain file with caching.
   Future<Uint8List> readFileWithCache(String path) async {
     final cached = _imageCache[path];
-    if (cached != null) return cached;
+    if (cached != null) {
+      _cacheOrder.remove(path);
+      _cacheOrder.add(path);
+      return cached;
+    }
 
     final bytes = await File(path).readAsBytes();
-    _imageCache[path] = bytes;
+    _addToCache(path, bytes);
     return bytes;
   }
 
   /// Remove a path from the image cache (call when a card is deleted).
   void evictFromCache(String path) {
     _imageCache.remove(path);
+    _cacheOrder.remove(path);
   }
 
   /// Securely delete a file by overwriting with random bytes, then zeros, then deleting.

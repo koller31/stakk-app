@@ -5,6 +5,8 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/theme/screens/theme_store_screen.dart';
+import '../../features/business/screens/add_business_connection_screen.dart';
+import '../../features/business/screens/manage_connections_screen.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
@@ -55,6 +57,14 @@ class AppRouter {
       GoRoute(
         path: '/theme-store',
         builder: (context, state) => const ThemeStoreScreen(),
+      ),
+      GoRoute(
+        path: '/business/add',
+        builder: (context, state) => const AddBusinessConnectionScreen(),
+      ),
+      GoRoute(
+        path: '/business/connections',
+        builder: (context, state) => const ManageConnectionsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

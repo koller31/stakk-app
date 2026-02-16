@@ -18,11 +18,9 @@ class ScreenPinningService {
     try {
       final result = await _channel.invokeMethod('startLockTask');
       return result == true;
-    } on PlatformException catch (e) {
-      print('Error starting screen pinning: ${e.message}');
+    } on PlatformException {
       return false;
-    } catch (e) {
-      print('Unexpected error starting screen pinning: $e');
+    } catch (_) {
       return false;
     }
   }
@@ -36,11 +34,9 @@ class ScreenPinningService {
     try {
       final result = await _channel.invokeMethod('stopLockTask');
       return result == true;
-    } on PlatformException catch (e) {
-      print('Error stopping screen pinning: ${e.message}');
+    } on PlatformException {
       return false;
-    } catch (e) {
-      print('Unexpected error stopping screen pinning: $e');
+    } catch (_) {
       return false;
     }
   }
@@ -57,11 +53,9 @@ class ScreenPinningService {
     try {
       final result = await _channel.invokeMethod('isInLockTaskMode');
       return result == true;
-    } on PlatformException catch (e) {
-      print('Error checking screen pinning status: ${e.message}');
+    } on PlatformException {
       return false;
-    } catch (e) {
-      print('Unexpected error checking screen pinning status: $e');
+    } catch (_) {
       return false;
     }
   }

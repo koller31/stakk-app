@@ -58,9 +58,9 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
   Future<void> _extractTextFromCard() async {
     setState(() => _isExtractingText = true);
 
+    final textRecognizer = TextRecognizer();
     try {
       final inputImage = InputImage.fromFilePath(widget.frontImagePath);
-      final textRecognizer = TextRecognizer();
       final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
 
       // Store all extracted text
@@ -77,12 +77,11 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
           _nameController.text = lines.first.trim();
         }
       }
-
-      await textRecognizer.close();
     } catch (e) {
-      print('Error extracting text: $e');
+      debugPrint('Error extracting text: $e');
       // OCR failure is non-critical, user can still enter details manually
     } finally {
+      await textRecognizer.close();
       if (mounted) {
         setState(() => _isExtractingText = false);
       }
@@ -325,6 +324,8 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
         return 'Vehicle Registration';
       case CardType.other:
         return 'Other';
+      case CardType.businessId:
+        return 'Business ID';
     }
   }
 
@@ -378,13 +379,6 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
       // Create card model with category
       final now = DateTime.now();
 
-      // DEBUG: Log category information
-      print('🔍 DEBUG: Creating card with:');
-      print('   - initialCategory: ${widget.initialCategory}');
-      print('   - categoryIndex: ${widget.initialCategory?.index}');
-      print('   - cardType: $_selectedType');
-      print('   - cardTypeIndex: ${_selectedType.index}');
-
       final card = WalletCardModel(
         id: cardId,
         name: _nameController.text.trim(),
@@ -406,9 +400,6 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
         hasBarcode: _hasBarcode,
       );
 
-      // DEBUG: Verify what was stored
-      print('🔍 DEBUG: Card created with categoryIndex: ${card.categoryIndex}');
-      print('🔍 DEBUG: Card.category getter returns: ${card.category}');
 
       // Save to repository
       await repository.addCard(card);

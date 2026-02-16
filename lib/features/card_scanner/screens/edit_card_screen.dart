@@ -215,6 +215,8 @@ class _EditCardScreenState extends State<EditCardScreen> {
         return 'Vehicle Registration';
       case CardType.other:
         return 'Other';
+      case CardType.businessId:
+        return 'Business ID';
     }
   }
 

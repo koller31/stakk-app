@@ -8,6 +8,7 @@ import '../../../core/services/screen_pinning_service.dart';
 import '../screens/expanded_category_screen.dart';
 import '../../auth/screens/pin_entry_screen.dart';
 import '../../card_scanner/screens/scan_card_screen.dart';
+import '../../business/screens/add_business_connection_screen.dart';
 import '../providers/lock_mode_provider.dart';
 import 'card_stack_widget.dart';
 import 'home_search_bar.dart';
@@ -218,6 +219,21 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
     );
 
     if (selectedCategory != null && context.mounted) {
+      // Business IDs go through OAuth flow, not camera scan
+      if (selectedCategory == CardCategory.businessIds) {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AddBusinessConnectionScreen(),
+          ),
+        );
+        if (result == true) {
+          _loadCategories();
+          widget.onCardsChanged?.call();
+        }
+        return;
+      }
+
       final result = await Navigator.push(
         context,
         MaterialPageRoute(

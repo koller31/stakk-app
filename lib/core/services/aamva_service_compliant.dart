@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// AAMVA Compliant Service - 2016 Standard (Version 08)
 ///
 /// This implementation follows the AAMVA DL/ID Card Design Standard
@@ -332,28 +334,31 @@ class AAMVAServiceCompliant {
     return true;
   }
 
-  /// Debug: Print the barcode data structure
+  /// Debug: Print the barcode data structure (only runs in debug mode)
   static void debugPrintStructure(String aamvaData) {
-    print('===== AAMVA BARCODE STRUCTURE =====');
-    print('Total Length: ${aamvaData.length} characters');
-    print('');
+    assert(() {
+      debugPrint('===== AAMVA BARCODE STRUCTURE =====');
+      debugPrint('Total Length: ${aamvaData.length} characters');
+      debugPrint('');
 
-    final lines = aamvaData.split('\r');
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i].replaceAll('\n', '\\n');
-      if (i == 0) {
-        print('COMPLIANCE INDICATOR: "$line"');
-      } else if (line.startsWith('ANSI')) {
-        print('FILE HEADER: "$line"');
-      } else if (line.startsWith('DL')) {
-        print('SUBFILE DESIGNATOR: "$line"');
-      } else if (line.length > 3) {
-        final fieldId = line.substring(0, 3);
-        final fieldValue = line.substring(3);
-        print('  $fieldId: "$fieldValue"');
+      final lines = aamvaData.split('\r');
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i].replaceAll('\n', '\\n');
+        if (i == 0) {
+          debugPrint('COMPLIANCE INDICATOR: "$line"');
+        } else if (line.startsWith('ANSI')) {
+          debugPrint('FILE HEADER: "$line"');
+        } else if (line.startsWith('DL')) {
+          debugPrint('SUBFILE DESIGNATOR: "$line"');
+        } else if (line.length > 3) {
+          final fieldId = line.substring(0, 3);
+          final fieldValue = line.substring(3);
+          debugPrint('  $fieldId: "$fieldValue"');
+        }
       }
-    }
-    print('===================================');
+      debugPrint('===================================');
+      return true;
+    }());
   }
 }
 

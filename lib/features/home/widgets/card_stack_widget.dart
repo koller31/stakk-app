@@ -5,6 +5,7 @@ import '../../../data/models/card_category.dart';
 import '../../../data/models/wallet_card_model.dart';
 import '../../card_detail/screens/id_card_detail_screen.dart';
 import '../../card_detail/screens/traffic_document_detail_screen.dart';
+import '../../card_detail/screens/business_card_detail_screen.dart';
 import 'category_carousel_widget.dart' show DashedBorderPainter;
 
 /// Card Stack Widget - Displays collapsed stacked cards (CashSwipe pattern)
@@ -43,7 +44,17 @@ class _CardStackWidgetState extends State<CardStackWidget> {
     // Double-tap on top card opens the detail viewer
     final category = card.category;
 
-    if (category == CardCategory.trafficDocuments ||
+    if (category == CardCategory.businessIds) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BusinessCardDetailScreen(
+            cards: widget.cards,
+            initialIndex: cardIndex,
+          ),
+        ),
+      );
+    } else if (category == CardCategory.trafficDocuments ||
         card.displayFormat == DisplayFormat.document) {
       Navigator.push(
         context,

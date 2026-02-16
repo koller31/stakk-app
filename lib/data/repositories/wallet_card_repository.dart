@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/wallet_card_model.dart';
@@ -73,7 +74,7 @@ class WalletCardRepository {
     try {
       await EncryptionService().secureDelete(path);
     } catch (e) {
-      print('Error deleting image file: $e');
+      debugPrint('Error deleting image file: $e');
     }
   }
 
@@ -96,6 +97,15 @@ class WalletCardRepository {
   List<WalletCardModel> getCardsByType(CardType type) {
     _ensureInitialized();
     return _box!.values.where((card) => card.cardType == type).toList()
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+  }
+
+  /// Get cards by business connection ID
+  List<WalletCardModel> getCardsByConnection(String connectionId) {
+    _ensureInitialized();
+    return _box!.values
+        .where((card) => card.businessConnectionId == connectionId)
+        .toList()
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
   }
 

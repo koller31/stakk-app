@@ -7,6 +7,7 @@ import '../widgets/category_carousel_widget.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../../card_detail/screens/id_card_detail_screen.dart';
 import '../../card_detail/screens/traffic_document_detail_screen.dart';
+import '../../card_detail/screens/business_card_detail_screen.dart';
 import '../../card_scanner/screens/scan_card_screen.dart';
 import '../../../data/models/wallet_card_model.dart';
 import '../../../data/models/card_category.dart';
@@ -87,7 +88,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     final indexInSorted = sortedCards.indexWhere((c) => c.id == card.id);
 
-    if (category == CardCategory.trafficDocuments ||
+    if (category == CardCategory.businessIds) {
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BusinessCardDetailScreen(
+            cards: sortedCards,
+            initialIndex: indexInSorted >= 0 ? indexInSorted : 0,
+          ),
+        ),
+      );
+    } else if (category == CardCategory.trafficDocuments ||
         card.displayFormat == DisplayFormat.document) {
       if (!mounted) return;
       await Navigator.push(

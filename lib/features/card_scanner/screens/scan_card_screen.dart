@@ -5,6 +5,7 @@ import 'package:edge_detection/edge_detection.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/services/auto_lock_service.dart';
 import '../../../data/models/card_category.dart';
 import 'card_metadata_screen.dart';
 
@@ -194,11 +195,14 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
         '${const Uuid().v4()}.jpg',
       );
 
+      // Suppress auto-lock while camera/gallery is open (2 min grace period)
+      AutoLockService().suppressLockFor();
+
       // Use edge detection to capture and crop the card
       // This will open the camera with automatic edge detection
       bool success = await EdgeDetection.detectEdge(
         imagePath,
-        canUseGallery: false,
+        canUseGallery: true,
         androidScanTitle: isBack ? 'Scan Back of Card' : 'Scan Front of Card',
         androidCropTitle: 'Crop Card',
         androidCropBlackWhiteTitle: 'Black White',
@@ -234,11 +238,6 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
 
   Future<void> _proceedToMetadata() async {
     if (_frontImagePath == null) return;
-
-    // DEBUG: Log category being passed
-    print('🔍 DEBUG [ScanCardScreen]: Passing initialCategory to CardMetadataScreen');
-    print('   - widget.initialCategory: ${widget.initialCategory}');
-    print('   - categoryIndex would be: ${widget.initialCategory?.index}');
 
     // Navigate to metadata screen to enter card details with category
     final result = await Navigator.push<Map<String, dynamic>>(

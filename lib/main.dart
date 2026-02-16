@@ -14,11 +14,13 @@ import 'core/services/auto_lock_service.dart';
 
 // Data - Models
 import 'data/models/wallet_card_model.dart';
+import 'data/models/business_connection_model.dart';
 // Features - Providers
 import 'features/home/providers/home_provider.dart';
 import 'features/home/providers/lock_mode_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/theme/providers/theme_provider.dart';
+import 'features/business/providers/business_connection_provider.dart';
 
 // Router
 import 'core/router/app_router.dart';
@@ -31,6 +33,7 @@ void main() async {
 
   // Register Hive type adapters
   Hive.registerAdapter(WalletCardModelAdapter());
+  Hive.registerAdapter(BusinessConnectionModelAdapter());
 
   // Run data migrations (encrypts DB + images for existing users)
   await MigrationService().runMigrations();
@@ -150,6 +153,11 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
         // Theme Provider
         ChangeNotifierProvider<ThemeProvider>(
           create: (context) => ThemeProvider(),
+        ),
+
+        // Business Connection Provider
+        ChangeNotifierProvider<BusinessConnectionProvider>(
+          create: (context) => BusinessConnectionProvider()..init(),
         ),
       ],
       child: Consumer<ThemeProvider>(

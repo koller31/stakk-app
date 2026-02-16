@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/auth_service.dart';
 
 /// Authentication status enum for routing
@@ -12,6 +13,8 @@ enum AuthStatus {
 /// Provider for managing authentication state
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _sessionKey = 'active_session_ts';
 
   bool _isAuthenticated = false;
   bool _isFirstLaunch = true;
@@ -44,14 +47,34 @@ class AuthProvider extends ChangeNotifier {
     try {
       _hasPin = await _authService.hasPin();
       _isFirstLaunch = !_hasPin;
-      _isAuthenticated = false;
+
+      // Check if there's an active session (survives activity recreation)
+      final sessionTs = await _storage.read(key: _sessionKey);
+      if (sessionTs != null && _hasPin) {
+        final sessionTime = DateTime.tryParse(sessionTs);
+        if (sessionTime != null &&
+            DateTime.now().difference(sessionTime).inMinutes < 5) {
+          _isAuthenticated = true;
+          _authStatus = AuthStatus.authenticated;
+          // Refresh the session timestamp
+          await _storage.write(
+              key: _sessionKey, value: DateTime.now().toIso8601String());
+          debugPrint('Auth restored from active session');
+        } else {
+          _isAuthenticated = false;
+          _authStatus = AuthStatus.unauthenticated;
+          await _storage.delete(key: _sessionKey);
+        }
+      } else {
+        _isAuthenticated = false;
+        _authStatus = AuthStatus.unauthenticated;
+      }
 
       // Cache biometric state
       _biometricsAvailable = await _authService.hasBiometrics();
       _biometricsEnabled = await _authService.isBiometricEnabled();
 
-      _authStatus = AuthStatus.unauthenticated;
-      debugPrint('Auth initialized: hasPin=$_hasPin, isFirstLaunch=$_isFirstLaunch');
+      debugPrint('Auth initialized: hasPin=$_hasPin, isFirstLaunch=$_isFirstLaunch, restored=$_isAuthenticated');
     } catch (e) {
       debugPrint('Error initializing auth: $e');
       _hasPin = false;
@@ -76,6 +99,8 @@ class AuthProvider extends ChangeNotifier {
       if (success) {
         _isAuthenticated = true;
         _authStatus = AuthStatus.authenticated;
+        await _storage.write(
+            key: _sessionKey, value: DateTime.now().toIso8601String());
         notifyListeners();
         return true;
       }
@@ -101,6 +126,8 @@ class AuthProvider extends ChangeNotifier {
       _isFirstLaunch = false;
       _isAuthenticated = true;
       _authStatus = AuthStatus.authenticated;
+      await _storage.write(
+          key: _sessionKey, value: DateTime.now().toIso8601String());
       debugPrint('PIN set successfully');
     } catch (e) {
       debugPrint('Error setting PIN: $e');
@@ -122,6 +149,8 @@ class AuthProvider extends ChangeNotifier {
       if (isValid) {
         _isAuthenticated = true;
         _authStatus = AuthStatus.authenticated;
+        await _storage.write(
+            key: _sessionKey, value: DateTime.now().toIso8601String());
         debugPrint('PIN verified successfully');
       } else {
         debugPrint('PIN verification failed');
@@ -142,6 +171,7 @@ class AuthProvider extends ChangeNotifier {
     if (_isAuthenticated) {
       _isAuthenticated = false;
       _authStatus = AuthStatus.unauthenticated;
+      _storage.delete(key: _sessionKey);
       debugPrint('App locked');
       notifyListeners();
     }

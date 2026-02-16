@@ -8,6 +8,7 @@ enum CardCategory {
   giftCards,
   trafficDocuments,
   other,
+  businessIds,
 }
 
 /// Metadata and utilities for card categories
@@ -19,6 +20,7 @@ class CardCategoryMetadata {
     CardCategory.giftCards: 'Gift Cards',
     CardCategory.trafficDocuments: 'Traffic Documents',
     CardCategory.other: 'Other',
+    CardCategory.businessIds: 'Business IDs',
   };
 
   static const Map<CardCategory, String> icons = {
@@ -28,15 +30,17 @@ class CardCategoryMetadata {
     CardCategory.giftCards: '🎁',
     CardCategory.trafficDocuments: '🚗',
     CardCategory.other: '📋',
+    CardCategory.businessIds: '🏢',
   };
 
   static const Map<CardCategory, int> defaultOrder = {
     CardCategory.idCards: 0,
-    CardCategory.memberships: 1,
-    CardCategory.insurance: 2,
-    CardCategory.giftCards: 3,
-    CardCategory.trafficDocuments: 4,
-    CardCategory.other: 5,
+    CardCategory.businessIds: 1,
+    CardCategory.memberships: 2,
+    CardCategory.insurance: 3,
+    CardCategory.giftCards: 4,
+    CardCategory.trafficDocuments: 5,
+    CardCategory.other: 6,
   };
 
   static String getDisplayName(CardCategory category) {
@@ -67,6 +71,8 @@ class CardCategoryMetadata {
         return CardCategory.trafficDocuments;
       case CardType.other:
         return CardCategory.other;
+      case CardType.businessId:
+        return CardCategory.businessIds;
     }
   }
 
@@ -84,6 +90,8 @@ class CardCategoryMetadata {
         return 4;
       case CardCategory.other:
         return 5;
+      case CardCategory.businessIds:
+        return 6;
     }
   }
 }

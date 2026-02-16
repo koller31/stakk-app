@@ -14,6 +14,16 @@ class AutoLockService {
   DateTime? _pausedAt;
   int _timeoutSeconds = 60; // Default: 1 minute
 
+  /// Grace period: suppresses auto-lock until this time.
+  /// Used when launching intents that background the app (image picker, OAuth, camera).
+  DateTime? _graceUntil;
+
+  /// Temporarily suppress auto-lock for [duration].
+  /// Use before launching camera, gallery picker, OAuth browser, etc.
+  void suppressLockFor({Duration duration = const Duration(minutes: 2)}) {
+    _graceUntil = DateTime.now().add(duration);
+  }
+
   /// Available timeout options (in seconds).
   static const Map<int, String> timeoutOptions = {
     30: '30 seconds',
@@ -42,6 +52,13 @@ class AutoLockService {
 
   /// Check if the app should lock on resume.
   Future<bool> shouldLockOnResume() async {
+    // If within a grace period, don't lock
+    if (_graceUntil != null && DateTime.now().isBefore(_graceUntil!)) {
+      _pausedAt = null;
+      return false;
+    }
+    _graceUntil = null;
+
     if (_timeoutSeconds == -1) return false; // "Never" setting
     if (_pausedAt == null) return false;
 

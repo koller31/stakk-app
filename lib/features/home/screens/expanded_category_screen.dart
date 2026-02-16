@@ -6,6 +6,7 @@ import '../../../data/repositories/wallet_card_repository.dart';
 import '../../../data/services/card_category_service.dart';
 import '../../card_scanner/screens/scan_card_screen.dart';
 import '../../card_scanner/screens/edit_card_screen.dart';
+import '../../business/screens/add_business_connection_screen.dart';
 
 class ExpandedCategoryScreen extends StatefulWidget {
   final CardCategory category;
@@ -239,14 +240,23 @@ class _ExpandedCategoryScreenState extends State<ExpandedCategoryScreen> {
           FloatingActionButton(
             heroTag: 'add',
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ScanCardScreen(
-                    initialCategory: widget.category,
+              if (widget.category == CardCategory.businessIds) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddBusinessConnectionScreen(),
                   ),
-                ),
-              );
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ScanCardScreen(
+                      initialCategory: widget.category,
+                    ),
+                  ),
+                );
+              }
             },
             child: const Icon(Icons.add),
           ),

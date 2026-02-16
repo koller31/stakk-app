@@ -35,6 +35,9 @@ class MigrationService {
     if (currentVersion < 1) {
       await _migrateV0ToV1();
     }
+    if (currentVersion < 2) {
+      await _migrateV1ToV2();
+    }
   }
 
   /// Version 0 -> 1: Encrypt Hive box and encrypt card images.
@@ -114,5 +117,13 @@ class MigrationService {
       // Don't rethrow - allow app to continue even if migration fails
       // The app will retry on next launch since version wasn't updated
     }
+  }
+
+  /// Version 1 -> 2: Add business ID support.
+  /// Hive handles new nullable fields gracefully - just bump version marker.
+  Future<void> _migrateV1ToV2() async {
+    debugPrint('MigrationService: Starting v1 -> v2 migration (business IDs)');
+    await _secureStorage.write(key: _migrationVersionKey, value: '2');
+    debugPrint('MigrationService: v1 -> v2 migration complete');
   }
 }

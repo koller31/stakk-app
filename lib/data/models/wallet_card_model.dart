@@ -13,6 +13,7 @@ enum CardType {
   healthInsurance,
   vehicleRegistration,
   other,
+  businessId,
 }
 
 /// Display format for viewing the card
@@ -65,6 +66,18 @@ class WalletCardModel extends HiveObject {
   @HiveField(13)
   final bool hasBarcode;
 
+  @HiveField(14)
+  final String? businessConnectionId;
+
+  @HiveField(15)
+  final String? nfcAid;
+
+  @HiveField(16)
+  final String? nfcPayload;
+
+  @HiveField(17)
+  final bool? isBusinessCard;
+
   WalletCardModel({
     required this.id,
     required this.name,
@@ -80,6 +93,10 @@ class WalletCardModel extends HiveObject {
     required this.categoryIndex,
     this.displayFormatIndex = 0,
     bool? hasBarcode,
+    this.businessConnectionId,
+    this.nfcAid,
+    this.nfcPayload,
+    this.isBusinessCard,
   }) : hasBarcode = hasBarcode ?? defaultHasBarcodeForType(CardType.values[cardTypeIndex]);
 
   /// Returns whether a card type typically has a scannable barcode
@@ -94,6 +111,7 @@ class WalletCardModel extends HiveObject {
         return true;
       case CardType.vehicleRegistration:
       case CardType.other:
+      case CardType.businessId:
         return false;
     }
   }
@@ -117,6 +135,10 @@ class WalletCardModel extends HiveObject {
     int? categoryIndex,
     int? displayFormatIndex,
     bool? hasBarcode,
+    String? businessConnectionId,
+    String? nfcAid,
+    String? nfcPayload,
+    bool? isBusinessCard,
   }) {
     return WalletCardModel(
       id: id ?? this.id,
@@ -133,6 +155,10 @@ class WalletCardModel extends HiveObject {
       categoryIndex: categoryIndex ?? this.categoryIndex,
       displayFormatIndex: displayFormatIndex ?? this.displayFormatIndex,
       hasBarcode: hasBarcode ?? this.hasBarcode,
+      businessConnectionId: businessConnectionId ?? this.businessConnectionId,
+      nfcAid: nfcAid ?? this.nfcAid,
+      nfcPayload: nfcPayload ?? this.nfcPayload,
+      isBusinessCard: isBusinessCard ?? this.isBusinessCard,
     );
   }
 
@@ -152,6 +178,10 @@ class WalletCardModel extends HiveObject {
       'categoryIndex': categoryIndex,
       'displayFormatIndex': displayFormatIndex,
       'hasBarcode': hasBarcode,
+      'businessConnectionId': businessConnectionId,
+      'nfcAid': nfcAid,
+      'nfcPayload': nfcPayload,
+      'isBusinessCard': isBusinessCard,
     };
   }
 
@@ -171,6 +201,10 @@ class WalletCardModel extends HiveObject {
       categoryIndex: json['categoryIndex'] as int,
       displayFormatIndex: json['displayFormatIndex'] as int? ?? 0,
       hasBarcode: json['hasBarcode'] as bool?,
+      businessConnectionId: json['businessConnectionId'] as String?,
+      nfcAid: json['nfcAid'] as String?,
+      nfcPayload: json['nfcPayload'] as String?,
+      isBusinessCard: json['isBusinessCard'] as bool?,
     );
   }
 }

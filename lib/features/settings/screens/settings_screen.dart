@@ -7,6 +7,7 @@ import '../../../core/services/auto_lock_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/pin_entry_screen.dart';
 import '../../theme/providers/theme_provider.dart';
+import '../../business/screens/manage_connections_screen.dart';
 import '../../../data/models/card_category.dart';
 import '../../../data/repositories/wallet_card_repository.dart';
 import '../../../data/services/card_category_service.dart';
@@ -324,6 +325,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           SizedBox(height: AppTheme.paddingLarge),
+          _buildSectionHeader('Business'),
+          _buildCard(
+            child: ListTile(
+              leading: Icon(Icons.business, color: AppColors.primaryAccent),
+              title: Text(
+                'Business Connections',
+                style: TextStyle(color: AppColors.primaryText),
+              ),
+              subtitle: Text(
+                'Manage OAuth badge connections',
+                style: TextStyle(
+                  color: AppColors.secondaryText,
+                  fontSize: 12,
+                ),
+              ),
+              trailing: Icon(Icons.chevron_right, color: AppColors.secondaryText),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ManageConnectionsScreen(),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: AppTheme.paddingLarge),
           _buildSectionHeader('Categories'),
           _buildCard(
             child: Column(
@@ -510,6 +536,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return Icons.drive_eta;
       case CardCategory.other:
         return Icons.credit_card;
+      case CardCategory.businessIds:
+        return Icons.business;
     }
   }
 

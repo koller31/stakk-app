@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/card_category.dart';
 import '../models/wallet_card_model.dart';
@@ -36,7 +37,7 @@ class CardCategoryService {
           .map((json) => CategoryPreferences.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error loading category preferences: $e');
+      debugPrint('Error loading category preferences: $e');
       // Return defaults on error
       return CardCategory.values
           .map((cat) => CategoryPreferences.defaultFor(cat))
@@ -169,7 +170,7 @@ class CardCategoryService {
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.cast<String>();
     } catch (e) {
-      print('Error loading card order for $category: $e');
+      debugPrint('Error loading card order for $category: $e');
       return [];
     }
   }

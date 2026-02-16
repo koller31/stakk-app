@@ -2,6 +2,10 @@
 
 part of 'wallet_card_model.dart';
 
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
 class WalletCardModelAdapter extends TypeAdapter<WalletCardModel> {
   @override
   final int typeId = 3;
@@ -24,16 +28,20 @@ class WalletCardModelAdapter extends TypeAdapter<WalletCardModel> {
       extractedData: (fields[8] as Map?)?.cast<String, dynamic>(),
       notes: fields[9] as String?,
       displayOrder: fields[10] as int,
-      categoryIndex: (fields[11] as int?) ?? 0,
-      displayFormatIndex: (fields[12] as int?) ?? 0,
+      categoryIndex: fields[11] as int,
+      displayFormatIndex: fields[12] as int,
       hasBarcode: fields[13] as bool?,
+      businessConnectionId: fields[14] as String?,
+      nfcAid: fields[15] as String?,
+      nfcPayload: fields[16] as String?,
+      isBusinessCard: fields[17] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletCardModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -61,7 +69,15 @@ class WalletCardModelAdapter extends TypeAdapter<WalletCardModel> {
       ..writeByte(12)
       ..write(obj.displayFormatIndex)
       ..writeByte(13)
-      ..write(obj.hasBarcode);
+      ..write(obj.hasBarcode)
+      ..writeByte(14)
+      ..write(obj.businessConnectionId)
+      ..writeByte(15)
+      ..write(obj.nfcAid)
+      ..writeByte(16)
+      ..write(obj.nfcPayload)
+      ..writeByte(17)
+      ..write(obj.isBusinessCard);
   }
 
   @override
