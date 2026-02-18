@@ -27,7 +27,7 @@ class DeviceSecurityService {
             content: const Text(
               'This device appears to be rooted or jailbroken. '
               'Your stored IDs and personal data may be at increased risk.\n\n'
-              'For maximum security, use IDswipe on an unmodified device.',
+              'For maximum security, use Stakk on an unmodified device.',
             ),
             actions: [
               TextButton(

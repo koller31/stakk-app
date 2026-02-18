@@ -200,7 +200,7 @@ class _LockScreenState extends State<LockScreen> {
 
               // App name
               Text(
-                'IDswipe',
+                'Stakk',
                 style: AppTheme.textTheme.displayMedium?.copyWith(
                   color: AppColors.primaryText,
                   fontSize: 36,

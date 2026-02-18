@@ -96,7 +96,7 @@ class _AddBusinessConnectionScreenState
           title: 'Software Engineer',
           department: 'Engineering',
           employeeId: 'EMP-2024-0042',
-          companyName: 'IDswipe Demo Corp',
+          companyName: 'Stakk Demo Corp',
           nfcAid: 'F049445357495045',
           nfcPayload: '454D502D323032342D30303432',
         );

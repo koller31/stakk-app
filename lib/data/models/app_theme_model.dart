@@ -37,7 +37,7 @@ class AppThemeModel {
   static const midnightTeal = AppThemeModel(
     id: 'midnight_teal',
     name: 'Midnight Teal',
-    description: 'The classic IDswipe look',
+    description: 'The classic Stakk look',
     primaryBackground: Color(0xFF0A0A0F),
     secondaryBackground: Color(0xFF14141F),
     elevatedSurface: Color(0xFF1E1E2D),

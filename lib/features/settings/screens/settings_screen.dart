@@ -454,7 +454,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: Icon(Icons.info_outline, color: AppColors.primaryAccent),
                   title: Text(
-                    'IDswipe',
+                    'Stakk',
                     style: TextStyle(color: AppColors.primaryText),
                   ),
                   subtitle: Text(

@@ -177,7 +177,7 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
           }
 
           return MaterialApp.router(
-            title: 'IDswipe',
+            title: 'Stakk',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.darkTheme,
             themeMode: ThemeMode.dark,

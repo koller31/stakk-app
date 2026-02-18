@@ -20,7 +20,7 @@ class ThemeStoreScreen extends StatelessWidget {
         backgroundColor: AppColors.elevatedSurface,
         elevation: 0,
         title: Text(
-          'Theme Store',
+          'Store',
           style: TextStyle(
             color: AppColors.primaryText,
             fontSize: 20,

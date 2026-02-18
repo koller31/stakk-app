@@ -1,4 +1,4 @@
-# IDswipe - Play Store Publishing Checklist
+# Stakk - Play Store Publishing Checklist
 
 ## What Claude Has Done (COMPLETE)
 - [x] Fixed Android manifest (INTERNET, CAMERA permissions)
@@ -20,11 +20,11 @@
 ## What You Need To Do
 
 ### Step 1: Host the Privacy Policy -- DONE
-- Privacy policy is live at: https://koller31.github.io/idswipe-privacy/
-- Source repo: https://github.com/koller31/idswipe-privacy
+- Privacy policy is live at: https://koller31.github.io/stakk-app/privacy-policy.html
+- Source repo: https://github.com/koller31/stakk-app
 
 ### Step 2: Create a Contact Email
-- Create idswipe.app@gmail.com (or use an existing email)
+- Contact email: joek331@gmail.com
 - This goes in the Play Store listing and privacy policy
 
 ### Step 3: Take Screenshots on Your Samsung
@@ -33,14 +33,14 @@ Install the release APK and take these screenshots (1080x1920 or similar):
 2. Home screen with some cards
 3. Card detail view (front of an ID)
 4. Card scanner in action
-5. Theme store
+5. Store
 6. Settings screen
 (Minimum 2 required, recommend 4-6)
 
 ### Step 4: Play Console Submission
 1. Go to https://play.google.com/console
 2. Create New App
-   - App name: IDswipe
+   - App name: Stakk
    - Default language: English (US)
    - App type: App (not game)
    - Free
@@ -61,8 +61,8 @@ Install the release APK and take these screenshots (1080x1920 or similar):
    - Select: 18+
    - Not designed for children
 7. App Release:
-   - Upload the APK from: IDswipe/build/app/outputs/flutter-apk/app-release.apk
-   - OR use App Bundle: IDswipe/build/app/outputs/bundle/release/app-release.aab
+   - Upload the APK from: Stakk/build/app/outputs/flutter-apk/app-release.apk
+   - OR use App Bundle: Stakk/build/app/outputs/bundle/release/app-release.aab
 8. Review and Publish
 
 ### Step 5: Wait for Review

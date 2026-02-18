@@ -190,7 +190,7 @@ class BusinessConnectionProvider extends ChangeNotifier {
       final now = DateTime.now();
       final connection = BusinessConnectionModel(
         id: const Uuid().v4(),
-        providerName: 'IDswipe Demo Corp',
+        providerName: 'Stakk Demo Corp',
         clientId: 'demo-client-id',
         badgeApiEndpoint: 'https://demo.idswipe.local/api/badge',
         accessToken: 'demo-access-token',
