@@ -78,6 +78,12 @@ class WalletCardModel extends HiveObject {
   @HiveField(17)
   final bool? isBusinessCard;
 
+  @HiveField(18)
+  final bool hasFrontBarcode;
+
+  @HiveField(19)
+  final bool hasBackBarcode;
+
   WalletCardModel({
     required this.id,
     required this.name,
@@ -97,6 +103,8 @@ class WalletCardModel extends HiveObject {
     this.nfcAid,
     this.nfcPayload,
     this.isBusinessCard,
+    this.hasFrontBarcode = false,
+    this.hasBackBarcode = false,
   }) : hasBarcode = hasBarcode ?? defaultHasBarcodeForType(CardType.values[cardTypeIndex]);
 
   /// Returns whether a card type typically has a scannable barcode
@@ -139,6 +147,8 @@ class WalletCardModel extends HiveObject {
     String? nfcAid,
     String? nfcPayload,
     bool? isBusinessCard,
+    bool? hasFrontBarcode,
+    bool? hasBackBarcode,
   }) {
     return WalletCardModel(
       id: id ?? this.id,
@@ -159,6 +169,8 @@ class WalletCardModel extends HiveObject {
       nfcAid: nfcAid ?? this.nfcAid,
       nfcPayload: nfcPayload ?? this.nfcPayload,
       isBusinessCard: isBusinessCard ?? this.isBusinessCard,
+      hasFrontBarcode: hasFrontBarcode ?? this.hasFrontBarcode,
+      hasBackBarcode: hasBackBarcode ?? this.hasBackBarcode,
     );
   }
 
@@ -182,6 +194,8 @@ class WalletCardModel extends HiveObject {
       'nfcAid': nfcAid,
       'nfcPayload': nfcPayload,
       'isBusinessCard': isBusinessCard,
+      'hasFrontBarcode': hasFrontBarcode,
+      'hasBackBarcode': hasBackBarcode,
     };
   }
 
@@ -205,6 +219,8 @@ class WalletCardModel extends HiveObject {
       nfcAid: json['nfcAid'] as String?,
       nfcPayload: json['nfcPayload'] as String?,
       isBusinessCard: json['isBusinessCard'] as bool?,
+      hasFrontBarcode: json['hasFrontBarcode'] as bool? ?? false,
+      hasBackBarcode: json['hasBackBarcode'] as bool? ?? false,
     );
   }
 }

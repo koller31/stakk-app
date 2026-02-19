@@ -14,6 +14,7 @@ import '../../../data/models/wallet_card_model.dart';
 /// - Double tap to flip between front and back
 /// - Horizontal swipe to navigate between cards
 /// - 3D flip animation
+/// - Per-side barcode brighten button (user-controlled)
 /// - Supports both mock ID cards (asset images) and scanned cards (file images)
 /// - Backward compatible with single card usage
 class IDCardDetailScreen extends StatefulWidget {
@@ -160,13 +161,33 @@ class _IDCardDetailScreenState extends State<IDCardDetailScreen>
     return 'ID Card - ${_showFrontList[index] ? 'Front' : 'Back'}';
   }
 
-  /// Whether the current card has a barcode (checks model field, falls back to back image presence)
-  bool _currentCardHasBarcode() {
+  /// Whether the current side should show the brighten button.
+  /// Uses per-side fields if set, otherwise falls back to legacy hasBarcode on back.
+  bool _shouldShowBrighten(int index) {
+    final showingFront = _showFrontList[index];
     if (widget.cards != null && widget.cards!.isNotEmpty) {
-      return widget.cards![_currentCardIndex].hasBarcode;
+      final card = widget.cards![index];
+      // If per-side flags are explicitly set, use them
+      if (card.hasFrontBarcode || card.hasBackBarcode) {
+        return showingFront ? card.hasFrontBarcode : card.hasBackBarcode;
+      }
+      // Legacy: use hasBarcode field on back only
+      return !showingFront && card.hasBarcode;
     }
-    // Legacy single card mode - assume ID cards have barcodes on back
-    return widget.backImagePath != null;
+    // Single card legacy mode: show on back
+    return !showingFront;
+  }
+
+  /// Whether to apply brightness filter on a specific side.
+  bool _shouldApplyBrightness(int index, bool showFront) {
+    if (widget.cards != null && widget.cards!.isNotEmpty) {
+      final card = widget.cards![index];
+      if (card.hasFrontBarcode || card.hasBackBarcode) {
+        return showFront ? card.hasFrontBarcode : card.hasBackBarcode;
+      }
+      return !showFront && card.hasBarcode;
+    }
+    return !showFront;
   }
 
   @override
@@ -229,8 +250,8 @@ class _IDCardDetailScreenState extends State<IDCardDetailScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Brightness boost button - show when viewing back of a card with barcode
-            if (!_showFrontList[_currentCardIndex] && _currentCardHasBarcode())
+            // Brightness boost button - show when current side has a barcode
+            if (_shouldShowBrighten(_currentCardIndex))
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
                 child: buildBrightenButton(),
@@ -349,8 +370,8 @@ class _IDCardDetailScreenState extends State<IDCardDetailScreen>
       );
     }
 
-    // Apply brightness filter when boost is active (only on back of card)
-    if (!showFront) {
+    // Apply brightness filter on the side that has a barcode
+    if (_shouldApplyBrightness(index, showFront)) {
       return applyBrightnessFilter(cardImage);
     }
 

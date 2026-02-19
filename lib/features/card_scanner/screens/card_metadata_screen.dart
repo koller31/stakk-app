@@ -14,12 +14,16 @@ class CardMetadataScreen extends StatefulWidget {
   final String frontImagePath;
   final String? backImagePath;
   final CardCategory? initialCategory;
+  final bool initialFrontHasBarcode;
+  final bool initialBackHasBarcode;
 
   const CardMetadataScreen({
     super.key,
     required this.frontImagePath,
     this.backImagePath,
     this.initialCategory,
+    this.initialFrontHasBarcode = false,
+    this.initialBackHasBarcode = false,
   });
 
   @override
@@ -34,7 +38,8 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
 
   CardType _selectedType = CardType.id;
   DisplayFormat _selectedFormat = DisplayFormat.card;
-  bool _hasBarcode = WalletCardModel.defaultHasBarcodeForType(CardType.id);
+  late bool _frontHasBarcode;
+  late bool _backHasBarcode;
   bool _isProcessing = false;
   bool _isExtractingText = false;
   Map<String, dynamic>? _extractedData;
@@ -42,6 +47,8 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
   @override
   void initState() {
     super.initState();
+    _frontHasBarcode = widget.initialFrontHasBarcode;
+    _backHasBarcode = widget.initialBackHasBarcode;
     // Auto-extract text from card (optional feature)
     _extractTextFromCard();
   }
@@ -176,7 +183,10 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
                     if (value != null) {
                       setState(() {
                         _selectedType = value;
-                        _hasBarcode = WalletCardModel.defaultHasBarcodeForType(value);
+                        // Auto-set defaults: back barcode = true for ID types
+                        final hasDefault = WalletCardModel.defaultHasBarcodeForType(value);
+                        _backHasBarcode = hasDefault;
+                        _frontHasBarcode = false;
                       });
                     }
                   },
@@ -233,16 +243,26 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
 
                 const SizedBox(height: AppTheme.spacingMd),
 
-                // Has Barcode Toggle
+                // Per-side barcode toggles
                 SwitchListTile(
-                  title: const Text('Has scannable barcode'),
-                  subtitle: const Text('Show brighten button when viewing card back'),
-                  value: _hasBarcode,
+                  title: const Text('Front has barcode'),
+                  subtitle: const Text('Show brighten button on front side'),
+                  value: _frontHasBarcode,
                   onChanged: (value) {
-                    setState(() => _hasBarcode = value);
+                    setState(() => _frontHasBarcode = value);
                   },
                   contentPadding: EdgeInsets.zero,
                 ),
+                if (widget.backImagePath != null)
+                  SwitchListTile(
+                    title: const Text('Back has barcode'),
+                    subtitle: const Text('Show brighten button on back side'),
+                    value: _backHasBarcode,
+                    onChanged: (value) {
+                      setState(() => _backHasBarcode = value);
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
 
                 const SizedBox(height: AppTheme.spacingMd),
 
@@ -397,7 +417,9 @@ class _CardMetadataScreenState extends State<CardMetadataScreen> {
         displayOrder: repository.getCardCount(), // Add at end
         categoryIndex: (widget.initialCategory ?? CardCategoryMetadata.getCategoryForCardType(_selectedType)).index,
         displayFormatIndex: _selectedFormat.index, // User-selected display format
-        hasBarcode: _hasBarcode,
+        hasBarcode: _frontHasBarcode || _backHasBarcode, // Legacy field
+        hasFrontBarcode: _frontHasBarcode,
+        hasBackBarcode: _backHasBarcode,
       );
 
 

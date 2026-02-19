@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'dart:async';
+import 'package:sensors_plus/sensors_plus.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/mixins/brightness_boost_mixin.dart';
 import '../../../core/widgets/encrypted_image.dart';
@@ -43,6 +45,12 @@ class _TrafficDocumentDetailScreenState
   // Track zoom state for each document
   late List<TransformationController> _transformControllers;
 
+  // Device rotation
+  late AnimationController _rotationController;
+  late Animation<double> _rotationAnimation;
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  double _targetRotation = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -74,16 +82,54 @@ class _TrafficDocumentDetailScreenState
       documentCount,
       (index) => TransformationController(),
     );
+
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _rotationAnimation = Tween<double>(begin: 0, end: 0).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
+    );
+
+    _startOrientationListener();
+  }
+
+  void _startOrientationListener() {
+    _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
+      const double sensitivityThreshold = 4.0;
+      double newRotation = 0.0;
+
+      if (event.x.abs() > event.y.abs() && event.x.abs() > sensitivityThreshold) {
+        if (event.x < 0) {
+          newRotation = math.pi;
+        }
+      }
+
+      if (newRotation != _targetRotation) {
+        setState(() {
+          _targetRotation = newRotation;
+          _rotationAnimation = Tween<double>(
+            begin: _rotationAnimation.value,
+            end: _targetRotation,
+          ).animate(
+            CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
+          );
+          _rotationController.forward(from: 0.0);
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _accelerometerSubscription?.cancel();
     for (var controller in _flipControllers) {
       controller.dispose();
     }
     for (var controller in _transformControllers) {
       controller.dispose();
     }
+    _rotationController.dispose();
     _pageController.dispose();
     disposeBrightness();
     super.dispose();
@@ -119,8 +165,25 @@ class _TrafficDocumentDetailScreenState
     _transformControllers[index].value = Matrix4.identity();
   }
 
-  bool _currentDocHasBarcode() {
-    return widget.documents[_currentDocumentIndex].hasBarcode;
+  /// Whether the current side of the current document has a barcode.
+  bool _currentSideHasBarcode() {
+    final showingFront = _showFrontList[_currentDocumentIndex];
+    final doc = widget.documents[_currentDocumentIndex];
+    if (doc.hasFrontBarcode || doc.hasBackBarcode) {
+      return showingFront ? doc.hasFrontBarcode : doc.hasBackBarcode;
+    }
+    // Legacy fallback: use hasBarcode on back only
+    return !showingFront && doc.hasBarcode;
+  }
+
+  /// Whether a specific side of a document has a barcode (for brightness filter).
+  bool _sideHasBarcode(int index, bool showFront) {
+    final doc = widget.documents[index];
+    if (doc.hasFrontBarcode || doc.hasBackBarcode) {
+      return showFront ? doc.hasFrontBarcode : doc.hasBackBarcode;
+    }
+    // Legacy fallback: use hasBarcode on back only
+    return !showFront && doc.hasBarcode;
   }
 
   @override
@@ -184,8 +247,8 @@ class _TrafficDocumentDetailScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Brightness boost button - show when viewing back of a document with barcode
-            if (!_showFrontList[_currentDocumentIndex] && _currentDocHasBarcode())
+            // Brightness boost button - show when viewing a side that has a barcode
+            if (_currentSideHasBarcode())
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
                 child: buildBrightenButton(),
@@ -249,7 +312,7 @@ class _TrafficDocumentDetailScreenState
           child: GestureDetector(
             onDoubleTap: () => _flipCard(index),
             child: AnimatedBuilder(
-              animation: _flipAnimations[index],
+              animation: Listenable.merge([_flipAnimations[index], _rotationAnimation]),
               builder: (context, child) {
                 // Calculate the rotation angle for flip
                 final angle = _flipAnimations[index].value * math.pi;
@@ -261,6 +324,7 @@ class _TrafficDocumentDetailScreenState
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
                     ..setEntry(3, 2, 0.001) // Perspective
+                    ..rotateZ(_rotationAnimation.value) // Device orientation
                     ..rotateY(angle), // Apply flip animation
                   child: Container(
                     decoration: BoxDecoration(
@@ -277,7 +341,7 @@ class _TrafficDocumentDetailScreenState
                       alignment: Alignment.center,
                       transform: Matrix4.identity()
                         ..rotateY(showFront ? 0 : math.pi), // Flip back image
-                      child: _buildDocImage(document, showFront),
+                      child: _buildDocImage(index, document, showFront),
                     ),
                   ),
                 );
@@ -292,7 +356,7 @@ class _TrafficDocumentDetailScreenState
         child: GestureDetector(
           onDoubleTap: () => _flipCard(index),
           child: AnimatedBuilder(
-            animation: _flipAnimations[index],
+            animation: Listenable.merge([_flipAnimations[index], _rotationAnimation]),
             builder: (context, child) {
               // Calculate the rotation angle for flip
               final angle = _flipAnimations[index].value * math.pi;
@@ -308,6 +372,7 @@ class _TrafficDocumentDetailScreenState
                 alignment: Alignment.center,
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001) // Perspective
+                  ..rotateZ(_rotationAnimation.value) // Device orientation
                   ..rotateY(angle), // Apply flip animation
                 child: Container(
                   width: cardWidth,
@@ -341,15 +406,16 @@ class _TrafficDocumentDetailScreenState
     }
   }
 
-  Widget _buildDocImage(WalletCardModel document, bool showFront) {
+  Widget _buildDocImage(int index, WalletCardModel document, bool showFront) {
     final imagePath = showFront
         ? document.frontImagePath
         : (document.backImagePath ?? document.frontImagePath);
     final image = EncryptedImage(
       path: imagePath,
       fit: BoxFit.contain,
+      quarterTurns: 1,
     );
-    if (!showFront) return applyBrightnessFilter(image);
+    if (_sideHasBarcode(index, showFront)) return applyBrightnessFilter(image);
     return image;
   }
 
@@ -363,7 +429,7 @@ class _TrafficDocumentDetailScreenState
       fit: BoxFit.cover,
       quarterTurns: 1,
     );
-    if (!showFront) return applyBrightnessFilter(image);
+    if (_sideHasBarcode(index, showFront)) return applyBrightnessFilter(image);
     return image;
   }
 }

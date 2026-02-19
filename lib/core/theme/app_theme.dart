@@ -273,7 +273,7 @@ class AppTheme {
       ),
 
       // Dialog theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.elevatedSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadiusLg),
@@ -360,8 +360,8 @@ class AppTheme {
   // CARD THEME
   // ============================================================================
 
-  static CardTheme get _cardTheme {
-    return CardTheme(
+  static CardThemeData get _cardTheme {
+    return CardThemeData(
       color: AppColors.secondaryBackground,
       elevation: 0,
       shadowColor: Colors.black.withOpacity(0.15),

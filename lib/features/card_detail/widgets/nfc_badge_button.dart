@@ -104,7 +104,7 @@ class NfcBadgeButtonState extends State<NfcBadgeButton>
         });
 
         // Haptic feedback
-        if (await Vibration.hasVibrator() ?? false) {
+        if (await Vibration.hasVibrator()) {
           Vibration.vibrate(duration: 100);
         }
 

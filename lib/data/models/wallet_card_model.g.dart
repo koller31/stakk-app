@@ -35,13 +35,15 @@ class WalletCardModelAdapter extends TypeAdapter<WalletCardModel> {
       nfcAid: fields[15] as String?,
       nfcPayload: fields[16] as String?,
       isBusinessCard: fields[17] as bool?,
+      hasFrontBarcode: (fields[18] as bool?) ?? false,
+      hasBackBarcode: (fields[19] as bool?) ?? false,
     );
   }
 
   @override
   void write(BinaryWriter writer, WalletCardModel obj) {
     writer
-      ..writeByte(18)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -77,7 +79,11 @@ class WalletCardModelAdapter extends TypeAdapter<WalletCardModel> {
       ..writeByte(16)
       ..write(obj.nfcPayload)
       ..writeByte(17)
-      ..write(obj.isBusinessCard);
+      ..write(obj.isBusinessCard)
+      ..writeByte(18)
+      ..write(obj.hasFrontBarcode)
+      ..writeByte(19)
+      ..write(obj.hasBackBarcode);
   }
 
   @override

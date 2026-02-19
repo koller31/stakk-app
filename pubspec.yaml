@@ -54,7 +54,8 @@ dependencies:
   # Camera and image processing
   camera: ^0.10.5+9
   edge_detection: ^1.1.1
-  google_mlkit_text_recognition: ^0.11.0
+  google_mlkit_text_recognition: ^0.13.0
+  # google_mlkit_barcode_scanning removed - using manual per-side barcode toggles
   image_picker: ^1.0.7
   image: ^4.1.7
   path_provider: ^2.1.2
@@ -67,7 +68,7 @@ dependencies:
   # Device features
   screen_brightness: ^1.0.1
   uuid: ^4.2.2
-  vibration: ^1.8.4
+  vibration: ^3.0.0
   sensors_plus: ^6.0.1
 
   # Utilities

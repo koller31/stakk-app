@@ -23,6 +23,8 @@ class _EditCardScreenState extends State<EditCardScreen> {
   late final TextEditingController _notesController;
   late CardType _selectedType;
   late DisplayFormat _selectedFormat;
+  late bool _frontHasBarcode;
+  late bool _backHasBarcode;
   bool _isProcessing = false;
 
   @override
@@ -33,6 +35,8 @@ class _EditCardScreenState extends State<EditCardScreen> {
     _notesController = TextEditingController(text: widget.card.notes ?? '');
     _selectedType = widget.card.cardType;
     _selectedFormat = widget.card.displayFormat;
+    _frontHasBarcode = widget.card.hasFrontBarcode;
+    _backHasBarcode = widget.card.hasBackBarcode;
   }
 
   @override
@@ -160,6 +164,29 @@ class _EditCardScreenState extends State<EditCardScreen> {
 
                 const SizedBox(height: AppTheme.spacingMd),
 
+                // Per-side barcode toggles
+                SwitchListTile(
+                  title: const Text('Front has barcode'),
+                  subtitle: const Text('Show brighten button on front side'),
+                  value: _frontHasBarcode,
+                  onChanged: (value) {
+                    setState(() => _frontHasBarcode = value);
+                  },
+                  contentPadding: EdgeInsets.zero,
+                ),
+                if (widget.card.backImagePath != null)
+                  SwitchListTile(
+                    title: const Text('Back has barcode'),
+                    subtitle: const Text('Show brighten button on back side'),
+                    value: _backHasBarcode,
+                    onChanged: (value) {
+                      setState(() => _backHasBarcode = value);
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
+
+                const SizedBox(height: AppTheme.spacingMd),
+
                 // Notes Field (Optional)
                 TextFormField(
                   controller: _notesController,
@@ -240,6 +267,9 @@ class _EditCardScreenState extends State<EditCardScreen> {
         notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
+        hasBarcode: _frontHasBarcode || _backHasBarcode,
+        hasFrontBarcode: _frontHasBarcode,
+        hasBackBarcode: _backHasBarcode,
         updatedAt: DateTime.now(),
       );
 

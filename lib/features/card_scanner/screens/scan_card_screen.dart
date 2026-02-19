@@ -23,6 +23,8 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
   String? _frontImagePath;
   String? _backImagePath;
   bool _isProcessing = false;
+  bool _frontHasBarcode = false;
+  bool _backHasBarcode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,65 +38,88 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppTheme.spacingLg),
+              // Scrollable content area
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: AppTheme.spacingSm),
 
-              // Instructions
-              Text(
-                'Capture your card to add it to your digital wallet',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
+                      // Instructions
+                      Text(
+                        'Capture your card',
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
 
-              const SizedBox(height: AppTheme.spacingMd),
+                      const SizedBox(height: AppTheme.spacingMd),
 
-              Text(
-                'Position the card on a flat surface with good lighting for best results.',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
+                      // Front Image Card
+                      _buildImageCard(
+                        context,
+                        title: 'Front of Card',
+                        imagePath: _frontImagePath,
+                        onCapture: () => _captureCard(isBack: false),
+                        onRecrop: null,
+                      ),
 
-              const SizedBox(height: AppTheme.spacingXl),
+                      // Front barcode toggle (only after image captured)
+                      if (_frontImagePath != null)
+                        CheckboxListTile(
+                          title: const Text('Front has barcode'),
+                          value: _frontHasBarcode,
+                          onChanged: (v) => setState(() => _frontHasBarcode = v ?? false),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
 
-              // Front Image Card
-              _buildImageCard(
-                context,
-                title: 'Front of Card',
-                imagePath: _frontImagePath,
-                onCapture: () => _captureCard(isBack: false),
-                onRecrop: null,
-              ),
+                      const SizedBox(height: AppTheme.spacingMd),
 
-              const SizedBox(height: AppTheme.spacingLg),
+                      // Back Image Card
+                      _buildImageCard(
+                        context,
+                        title: 'Back of Card (Optional)',
+                        imagePath: _backImagePath,
+                        onCapture: () => _captureCard(isBack: true),
+                        onRecrop: null,
+                      ),
 
-              // Back Image Card
-              _buildImageCard(
-                context,
-                title: 'Back of Card (Optional)',
-                imagePath: _backImagePath,
-                onCapture: () => _captureCard(isBack: true),
-                onRecrop: null,
-              ),
-
-              const Spacer(),
-
-              // Continue Button
-              ElevatedButton(
-                onPressed: _frontImagePath != null && !_isProcessing
-                  ? _proceedToMetadata
-                  : null,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingMd),
+                      // Back barcode toggle (only after image captured)
+                      if (_backImagePath != null)
+                        CheckboxListTile(
+                          title: const Text('Back has barcode'),
+                          value: _backHasBarcode,
+                          onChanged: (v) => setState(() => _backHasBarcode = v ?? false),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                    ],
+                  ),
                 ),
-                child: _isProcessing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Continue'),
               ),
 
-              const SizedBox(height: AppTheme.spacingMd),
+              // Continue Button - always visible at bottom
+              Padding(
+                padding: const EdgeInsets.only(top: AppTheme.spacingSm, bottom: AppTheme.spacingSm),
+                child: ElevatedButton(
+                  onPressed: _frontImagePath != null && !_isProcessing
+                    ? _proceedToMetadata
+                    : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingMd),
+                  ),
+                  child: _isProcessing
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Continue'),
+                ),
+              ),
             ],
           ),
         ),
@@ -110,7 +135,7 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
     VoidCallback? onRecrop,
   }) {
     return Container(
-      height: 200,
+      height: 160,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300, width: 2),
         borderRadius: AppTheme.borderRadiusLgAll,
@@ -247,6 +272,8 @@ class _ScanCardScreenState extends State<ScanCardScreen> {
           frontImagePath: _frontImagePath!,
           backImagePath: _backImagePath,
           initialCategory: widget.initialCategory,
+          initialFrontHasBarcode: _frontHasBarcode,
+          initialBackHasBarcode: _backHasBarcode,
         ),
       ),
     );
