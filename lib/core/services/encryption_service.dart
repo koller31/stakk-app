@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -22,16 +23,37 @@ class EncryptionService {
   Future<Uint8List> getOrCreateHiveKey() async {
     final existing = await _secureStorage.read(key: _hiveKeyStorageKey);
     if (existing != null) {
-      return Uint8List.fromList(existing.codeUnits);
+      // Check if this is base64-encoded (new format) or raw codeUnits (legacy)
+      if (_isValidBase64(existing)) {
+        return Uint8List.fromList(base64Decode(existing));
+      }
+      // Legacy format: migrate to base64
+      final key = Uint8List.fromList(existing.codeUnits);
+      await _secureStorage.write(
+        key: _hiveKeyStorageKey,
+        value: base64Encode(key),
+      );
+      return key;
     }
 
     // Generate 32 random bytes for AES-256
     final key = _generateRandomBytes(32);
     await _secureStorage.write(
       key: _hiveKeyStorageKey,
-      value: String.fromCharCodes(key),
+      value: base64Encode(key),
     );
     return key;
+  }
+
+  /// Check if a string is valid base64 (32 bytes = 44 chars with padding).
+  bool _isValidBase64(String value) {
+    if (value.length != 44 || !value.endsWith('=')) return false;
+    try {
+      final decoded = base64Decode(value);
+      return decoded.length == 32;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Returns a HiveAesCipher for opening encrypted Hive boxes.

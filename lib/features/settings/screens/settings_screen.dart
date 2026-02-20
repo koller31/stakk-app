@@ -63,14 +63,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _changePIN() async {
-    await Navigator.push(
+    // First verify the current PIN
+    final currentPin = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PinEntryScreen(
+          mode: PinEntryMode.unlock,
+          title: 'Verify Current PIN',
+          subtitle: 'Enter your current PIN to continue',
+        ),
+      ),
+    );
+
+    if (currentPin == null || !mounted) return;
+
+    // Verify the current PIN
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isValid = await authProvider.verifyPin(currentPin);
+
+    if (!isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Incorrect PIN'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Now allow setting a new PIN
+    if (!mounted) return;
+    final newPin = await Navigator.push<String>(
       context,
       MaterialPageRoute(
         builder: (context) => const PinEntryScreen(
           mode: PinEntryMode.set,
+          title: 'Set New PIN',
+          subtitle: 'Create a new 4-digit PIN',
         ),
       ),
     );
+
+    if (newPin != null && mounted) {
+      await authProvider.setPin(newPin);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('PIN changed successfully'),
+            backgroundColor: AppColors.elevatedSurface,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _showAutoLockPicker() async {

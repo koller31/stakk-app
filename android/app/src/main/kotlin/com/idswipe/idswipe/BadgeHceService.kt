@@ -2,6 +2,8 @@ package com.idswipe.idswipe
 
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 
 class BadgeHceService : HostApduService() {
     companion object {
@@ -9,16 +11,15 @@ class BadgeHceService : HostApduService() {
         var activePayload: ByteArray? = null
         var isActive: Boolean = false
 
-        // Standard SELECT APDU header
         private val SELECT_APDU_HEADER = byteArrayOf(
-            0x00.toByte(), // CLA
-            0xA4.toByte(), // INS (SELECT)
-            0x04.toByte(), // P1 (by name)
-            0x00.toByte()  // P2
+            0x00.toByte(), 0xA4.toByte(), 0x04.toByte(), 0x00.toByte()
         )
-
         private val SUCCESS_SW = byteArrayOf(0x90.toByte(), 0x00.toByte())
         private val FAILURE_SW = byteArrayOf(0x6F.toByte(), 0x00.toByte())
+
+        private val handler = Handler(Looper.getMainLooper())
+        private var timeoutRunnable: Runnable? = null
+        private const val PAYLOAD_TIMEOUT_MS = 30_000L // 30 seconds
 
         fun hexStringToByteArray(hex: String): ByteArray {
             val cleanHex = hex.replace(" ", "").replace(":", "")
@@ -31,6 +32,28 @@ class BadgeHceService : HostApduService() {
             }
             return data
         }
+
+        /** Clear the active payload and zero the byte array. */
+        fun clearPayload() {
+            activePayload?.fill(0) // Zero out the bytes before releasing
+            activePayload = null
+            activeAid = null
+            isActive = false
+            cancelTimeout()
+        }
+
+        /** Start auto-clear timeout. Payload is cleared after 30 seconds. */
+        fun startTimeout() {
+            cancelTimeout()
+            timeoutRunnable = Runnable { clearPayload() }
+            handler.postDelayed(timeoutRunnable!!, PAYLOAD_TIMEOUT_MS)
+        }
+
+        /** Cancel any pending auto-clear timeout. */
+        fun cancelTimeout() {
+            timeoutRunnable?.let { handler.removeCallbacks(it) }
+            timeoutRunnable = null
+        }
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
@@ -38,11 +61,9 @@ class BadgeHceService : HostApduService() {
             return FAILURE_SW
         }
 
-        // Check if this is a SELECT command
         if (commandApdu.size >= 4 &&
             commandApdu[0] == SELECT_APDU_HEADER[0] &&
             commandApdu[1] == SELECT_APDU_HEADER[1]) {
-            // Return payload + success status word
             return activePayload!! + SUCCESS_SW
         }
 
@@ -50,6 +71,6 @@ class BadgeHceService : HostApduService() {
     }
 
     override fun onDeactivated(reason: Int) {
-        // Called when HCE is deactivated
+        clearPayload()
     }
 }

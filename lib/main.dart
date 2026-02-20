@@ -117,7 +117,7 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
       try {
         final authProvider =
             Provider.of<AuthProvider>(context, listen: false);
-        authProvider.lock();
+        await authProvider.lock();
       } catch (_) {}
     }
   }

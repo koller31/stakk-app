@@ -30,8 +30,9 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Clean up reader mode when app backgrounds
         stopNfcReaderMode()
+        // Clear HCE payload when app backgrounds to prevent pocket-tap attacks
+        BadgeHceService.clearPayload()
     }
 
     private fun stopNfcReaderMode() {
@@ -98,6 +99,8 @@ class MainActivity : FlutterFragmentActivity() {
                             BadgeHceService.activePayload = BadgeHceService.hexStringToByteArray(payload)
                             BadgeHceService.activeAid = aid
                             BadgeHceService.isActive = true
+                            // Auto-clear payload after 30 seconds
+                            BadgeHceService.startTimeout()
 
                             // Dynamically register AID
                             val nfcAdapter = NfcAdapter.getDefaultAdapter(this)

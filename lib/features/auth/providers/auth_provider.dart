@@ -53,7 +53,7 @@ class AuthProvider extends ChangeNotifier {
       if (sessionTs != null && _hasPin) {
         final sessionTime = DateTime.tryParse(sessionTs);
         if (sessionTime != null &&
-            DateTime.now().difference(sessionTime).inMinutes < 5) {
+            DateTime.now().difference(sessionTime).inSeconds < 30) {
           _isAuthenticated = true;
           _authStatus = AuthStatus.authenticated;
           // Refresh the session timestamp
@@ -167,11 +167,11 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Lock the app
-  void lock() {
+  Future<void> lock() async {
     if (_isAuthenticated) {
       _isAuthenticated = false;
       _authStatus = AuthStatus.unauthenticated;
-      _storage.delete(key: _sessionKey);
+      await _storage.delete(key: _sessionKey);
       debugPrint('App locked');
       notifyListeners();
     }
@@ -202,6 +202,16 @@ class AuthProvider extends ChangeNotifier {
   /// Set biometrics enabled (alias for toggleBiometric)
   Future<void> setBiometricsEnabled(bool enabled) async {
     await toggleBiometric(enabled);
+  }
+
+  /// Check lockout status
+  Future<int?> getLockoutRemainingSeconds() async {
+    return await _authService.getLockoutRemainingSeconds();
+  }
+
+  /// Get failed attempt count
+  Future<int> getFailedAttemptCount() async {
+    return await _authService.getFailedAttemptCount();
   }
 
   /// Clear all auth data

@@ -334,29 +334,12 @@ class AAMVAServiceCompliant {
     return true;
   }
 
-  /// Debug: Print the barcode data structure (only runs in debug mode)
+  /// Debug: Print barcode field count only (no PII). Only runs in debug mode.
   static void debugPrintStructure(String aamvaData) {
     assert(() {
-      debugPrint('===== AAMVA BARCODE STRUCTURE =====');
-      debugPrint('Total Length: ${aamvaData.length} characters');
-      debugPrint('');
-
       final lines = aamvaData.split('\r');
-      for (var i = 0; i < lines.length; i++) {
-        final line = lines[i].replaceAll('\n', '\\n');
-        if (i == 0) {
-          debugPrint('COMPLIANCE INDICATOR: "$line"');
-        } else if (line.startsWith('ANSI')) {
-          debugPrint('FILE HEADER: "$line"');
-        } else if (line.startsWith('DL')) {
-          debugPrint('SUBFILE DESIGNATOR: "$line"');
-        } else if (line.length > 3) {
-          final fieldId = line.substring(0, 3);
-          final fieldValue = line.substring(3);
-          debugPrint('  $fieldId: "$fieldValue"');
-        }
-      }
-      debugPrint('===================================');
+      final fieldCount = lines.where((l) => l.length > 3).length;
+      debugPrint('AAMVA barcode: ${aamvaData.length} chars, $fieldCount fields');
       return true;
     }());
   }

@@ -101,13 +101,25 @@ class _LockScreenState extends State<LockScreen> {
       }
     } else {
       // Unlock mode - verify PIN
+      final lockoutRemaining = await authProvider.getLockoutRemainingSeconds();
+      if (lockoutRemaining != null && lockoutRemaining > 0 && mounted) {
+        _showError('Too many failed attempts. Try again in $lockoutRemaining seconds.');
+        return;
+      }
+
       final isValid = await authProvider.verifyPin(pin);
 
       if (isValid && mounted) {
         context.go('/home');
       } else if (mounted) {
-        _showError('Incorrect PIN. Please try again.');
-        // Automatically show PIN entry again
+        final failCount = await authProvider.getFailedAttemptCount();
+        if (failCount >= 10) {
+          _showError('Too many failed attempts. Locked for 5 minutes.');
+        } else if (failCount >= 5) {
+          _showError('Incorrect PIN. Locked for 30 seconds.');
+        } else {
+          _showError('Incorrect PIN. ${5 - failCount} attempts remaining.');
+        }
         _handlePinEntry();
       }
     }

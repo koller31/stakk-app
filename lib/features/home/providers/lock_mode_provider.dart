@@ -105,11 +105,6 @@ class LockModeProvider extends ChangeNotifier {
     return true;
   }
 
-  void forceUnlock() {
-    _isLocked = false;
-    notifyListeners();
-  }
-
   Future<void> clearPin() async {
     _hasPin = false;
     _isLocked = false;
