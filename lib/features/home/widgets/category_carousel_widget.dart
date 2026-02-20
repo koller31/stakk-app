@@ -219,17 +219,13 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
     );
 
     if (selectedCategory != null && context.mounted) {
-      // Business IDs go through OAuth flow, not camera scan
+      // Business IDs feature hidden until NFC badge OAuth workflow is validated.
+      // To re-enable, replace this block with navigation to AddBusinessConnectionScreen.
       if (selectedCategory == CardCategory.businessIds) {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AddBusinessConnectionScreen(),
-          ),
-        );
-        if (result == true) {
-          _loadCategories();
-          widget.onCardsChanged?.call();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Business badge feature coming soon')),
+          );
         }
         return;
       }

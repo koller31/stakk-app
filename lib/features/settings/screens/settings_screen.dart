@@ -324,31 +324,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => context.push('/theme-store'),
             ),
           ),
-          SizedBox(height: AppTheme.paddingLarge),
-          _buildSectionHeader('Business'),
-          _buildCard(
-            child: ListTile(
-              leading: Icon(Icons.business, color: AppColors.primaryAccent),
-              title: Text(
-                'Business Connections',
-                style: TextStyle(color: AppColors.primaryText),
-              ),
-              subtitle: Text(
-                'Manage OAuth badge connections',
-                style: TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 12,
-                ),
-              ),
-              trailing: Icon(Icons.chevron_right, color: AppColors.secondaryText),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ManageConnectionsScreen(),
-                ),
-              ),
-            ),
-          ),
+          // NOTE: Business Connections section hidden until NFC badge OAuth
+          // workflow is validated with a real institution. To re-enable, uncomment
+          // this block and the ManageConnectionsScreen import.
+          // SizedBox(height: AppTheme.paddingLarge),
+          // _buildSectionHeader('Business'),
+          // _buildCard(
+          //   child: ListTile(
+          //     leading: Icon(Icons.business, color: AppColors.primaryAccent),
+          //     title: Text(
+          //       'Business Connections',
+          //       style: TextStyle(color: AppColors.primaryText),
+          //     ),
+          //     subtitle: Text(
+          //       'Manage OAuth badge connections',
+          //       style: TextStyle(
+          //         color: AppColors.secondaryText,
+          //         fontSize: 12,
+          //       ),
+          //     ),
+          //     trailing: Icon(Icons.chevron_right, color: AppColors.secondaryText),
+          //     onTap: () => Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) => const ManageConnectionsScreen(),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           SizedBox(height: AppTheme.paddingLarge),
           _buildSectionHeader('Categories'),
           _buildCard(

@@ -241,11 +241,9 @@ class _ExpandedCategoryScreenState extends State<ExpandedCategoryScreen> {
             heroTag: 'add',
             onPressed: () {
               if (widget.category == CardCategory.businessIds) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddBusinessConnectionScreen(),
-                  ),
+                // Business IDs feature hidden until NFC badge OAuth workflow is validated.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Business badge feature coming soon')),
                 );
               } else {
                 Navigator.push(
