@@ -2,8 +2,8 @@
 
 Everything you need to publish Stakk on Google Play, organized as step-by-step instructions.
 
-**Last updated**: February 20, 2026
-**Security audit**: Passed (30 vulnerabilities found and fixed, commit fee30ec)
+**Last updated**: February 23, 2026
+**Security audits**: Two audits passed (30 + 17 findings fixed, commits fee30ec & 6b9a239)
 
 ---
 
@@ -85,7 +85,8 @@ FEATURES AT A GLANCE
 + Full-screen presentation mode with brightness boost
 + On-device OCR text extraction
 + NFC badge emulation for business IDs
-+ Multiple themes (dark and light)
++ Multiple themes (dark and light modes)
++ Customizable category order -- put your most-used cards first
 + Completely free, no ads, no in-app purchases
 
 Your wallet, simplified. Your privacy, protected.
@@ -190,7 +191,7 @@ Answer these questions in Play Console:
 
 ### Production AAB (READY)
 - Located at: `C:\Users\josep\Stakk-master\build\app\outputs\bundle\release\app-release.aab`
-- Size: ~113 MB
+- Size: ~114 MB
 - Signed with upload keystore
 - To rebuild: `flutter build appbundle --release` (from Stakk-master directory)
 
@@ -300,5 +301,6 @@ Answer these questions in Play Console:
 - [x] Store listing content (in this guide)
 - [x] Data safety form answers (in this guide)
 - [x] Content rating answers (in this guide)
-- [x] Security audit passed (30 findings fixed)
+- [x] Security audit #1 passed (30 findings fixed, commit fee30ec)
+- [x] Security audit #2 passed (17 findings fixed, commit 6b9a239)
 - [x] PUBLISHING_GUIDE.md (this file)

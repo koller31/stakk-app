@@ -11,7 +11,7 @@ You are walking Joseph through submitting Stakk to the Google Play Console. Jose
 - Content rating: Everyone
 - Target audience: 18+ (not designed for children)
 - Price: Free
-- Security audit: Passed (30 findings fixed, Feb 2026)
+- Security audits: 2 audits passed (30 + 17 findings fixed, Feb 2026)
 
 ## Files Available
 - Full publishing guide: `PUBLISHING_GUIDE.md` (read this first for all form answers)

@@ -5,13 +5,14 @@
 - [x] Generated upload keystore (android/upload-keystore.jks)
 - [x] Configured release signing in build.gradle
 - [x] Comprehensive Proguard rules
-- [x] Removed all debug print statements
+- [x] Debug print statements guarded with kDebugMode
 - [x] Added HTTP timeouts
 - [x] Fixed TextRecognizer resource leak
 - [x] Fixed OAuth null safety
 - [x] Added LRU image cache (50 entry cap)
 - [x] flutter analyze: 0 errors, 0 warnings
-- [x] Security audit: 30 vulnerabilities found and fixed (PBKDF2 PIN hashing, brute-force lockout, NFC auto-clear, HTTPS-only, backup disabled, etc.)
+- [x] Security audit #1: 30 vulnerabilities fixed (PBKDF2 PIN hashing, brute-force lockout, NFC auto-clear, HTTPS-only, backup disabled)
+- [x] Security audit #2: 17 findings fixed (FLAG_SECURE restored, demo PIN removed, biometricOnly, traffic lock PBKDF2, image cache clearing, data extraction rules)
 - [x] Built signed release AAB
 
 ## Store Assets (COMPLETE)
