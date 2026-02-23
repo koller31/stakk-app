@@ -33,9 +33,20 @@ class ImageDownloadService {
       final response = await http.get(uri).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
+        // Validate content type
+        final contentType = response.headers['content-type'] ?? '';
+        if (contentType.isNotEmpty && !contentType.startsWith('image/')) {
+          throw Exception('Invalid content type: $contentType. Expected image/*');
+        }
+
         // Check if response has content
         if (response.bodyBytes.isEmpty) {
           throw Exception('Downloaded image is empty from URL: $url');
+        }
+
+        // Reject excessively large files (10 MB cap)
+        if (response.bodyBytes.length > 10 * 1024 * 1024) {
+          throw Exception('Downloaded image too large: ${response.bodyBytes.length} bytes');
         }
 
         // Set up storage directory

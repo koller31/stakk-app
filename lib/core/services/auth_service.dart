@@ -42,7 +42,7 @@ class AuthService {
         localizedReason: 'Authenticate to access your IDs',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
         ),
       );
       if (didAuthenticate) {
@@ -64,6 +64,11 @@ class AuthService {
       final lockoutUntil = DateTime.tryParse(lockoutStr);
       if (lockoutUntil == null) return null;
       final remaining = lockoutUntil.difference(DateTime.now()).inSeconds;
+      // Guard against clock manipulation: if lockout is impossibly far in future, clear it
+      if (remaining > _extendedLockoutDurationSeconds + 60) {
+        await _secureStorage.delete(key: _lockoutUntilKey);
+        return null;
+      }
       if (remaining <= 0) {
         await _secureStorage.delete(key: _lockoutUntilKey);
         return null;
@@ -177,7 +182,7 @@ class AuthService {
         // Auto-upgrade to v2 if not already
         if (!storedPin.startsWith(_hashV2Prefix)) {
           await setPin(pin);
-          debugPrint('PIN auto-upgraded to PBKDF2 format');
+          if (kDebugMode) debugPrint('PIN auto-upgraded to PBKDF2 format');
         }
         await _resetFailedAttempts();
       } else {

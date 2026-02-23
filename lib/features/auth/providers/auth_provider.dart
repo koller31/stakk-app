@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/encryption_service.dart';
 
 /// Authentication status enum for routing
 enum AuthStatus {
@@ -57,7 +58,7 @@ class AuthProvider extends ChangeNotifier {
       _biometricsAvailable = await _authService.hasBiometrics();
       _biometricsEnabled = await _authService.isBiometricEnabled();
 
-      debugPrint('Auth initialized: hasPin=$_hasPin, isFirstLaunch=$_isFirstLaunch, restored=$_isAuthenticated');
+      if (kDebugMode) debugPrint('Auth initialized: hasPin=$_hasPin, isFirstLaunch=$_isFirstLaunch');
     } catch (e) {
       debugPrint('Error initializing auth: $e');
       _hasPin = false;
@@ -111,7 +112,7 @@ class AuthProvider extends ChangeNotifier {
       _authStatus = AuthStatus.authenticated;
       await _storage.write(
           key: _sessionKey, value: DateTime.now().toIso8601String());
-      debugPrint('PIN set successfully');
+      if (kDebugMode) debugPrint('PIN set successfully');
     } catch (e) {
       debugPrint('Error setting PIN: $e');
       rethrow;
@@ -134,9 +135,9 @@ class AuthProvider extends ChangeNotifier {
         _authStatus = AuthStatus.authenticated;
         await _storage.write(
             key: _sessionKey, value: DateTime.now().toIso8601String());
-        debugPrint('PIN verified successfully');
+        if (kDebugMode) debugPrint('PIN verified successfully');
       } else {
-        debugPrint('PIN verification failed');
+        if (kDebugMode) debugPrint('PIN verification failed');
       }
 
       return isValid;
@@ -155,6 +156,7 @@ class AuthProvider extends ChangeNotifier {
       _isAuthenticated = false;
       _authStatus = AuthStatus.unauthenticated;
       _storage.delete(key: _sessionKey); // fire-and-forget
+      EncryptionService().clearCache(); // wipe decrypted images from memory
       notifyListeners();
     }
   }

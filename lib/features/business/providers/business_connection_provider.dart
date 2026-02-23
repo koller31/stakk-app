@@ -179,9 +179,14 @@ class BusinessConnectionProvider extends ChangeNotifier {
     return _repository.getById(id);
   }
 
-  /// Add a demo connection (bypasses OAuth entirely)
-  /// Returns the connection so the UI can proceed to badge preview
+  /// Add a demo connection (bypasses OAuth entirely).
+  /// Only available in debug builds.
   Future<BusinessConnectionModel?> addDemoConnection() async {
+    if (!kDebugMode) {
+      debugPrint('BusinessConnectionProvider: Demo connections disabled in release');
+      return null;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -192,7 +197,7 @@ class BusinessConnectionProvider extends ChangeNotifier {
         id: const Uuid().v4(),
         providerName: 'Stakk Demo Corp',
         clientId: 'demo-client-id',
-        badgeApiEndpoint: 'https://demo.idswipe.local/api/badge',
+        badgeApiEndpoint: 'https://demo.stakk.local/api/badge',
         accessToken: 'demo-access-token',
         refreshToken: 'demo-refresh-token',
         tokenExpiry: now.add(const Duration(days: 365)),

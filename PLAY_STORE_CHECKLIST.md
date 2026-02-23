@@ -1,8 +1,8 @@
 # Stakk - Play Store Publishing Checklist
 
-## What Claude Has Done (COMPLETE)
-- [x] Fixed Android manifest (INTERNET, CAMERA permissions)
-- [x] Generated production keystore (upload-keystore.jks)
+## Technical Prep (COMPLETE)
+- [x] Android manifest permissions (INTERNET, CAMERA, NFC)
+- [x] Generated upload keystore (android/upload-keystore.jks)
 - [x] Configured release signing in build.gradle
 - [x] Comprehensive Proguard rules
 - [x] Removed all debug print statements
@@ -10,68 +10,39 @@
 - [x] Fixed TextRecognizer resource leak
 - [x] Fixed OAuth null safety
 - [x] Added LRU image cache (50 entry cap)
-- [x] Added path package dependency
 - [x] flutter analyze: 0 errors, 0 warnings
-- [x] Written privacy policy (privacy-policy.html)
-- [x] Written store listing (store-listing.md)
-- [x] Built signed release APK
-- [x] Created feature graphic (store-assets/feature-graphic.png)
+- [x] Security audit: 30 vulnerabilities found and fixed (PBKDF2 PIN hashing, brute-force lockout, NFC auto-clear, HTTPS-only, backup disabled, etc.)
+- [x] Built signed release AAB
+
+## Store Assets (COMPLETE)
+- [x] App icon with Stakk branding (store-assets/stakk-icon-512.png)
+- [x] Feature graphic (store-assets/feature-graphic.png)
+- [x] Screenshots captured (store-assets/screenshots/ - 7 images)
+- [x] Privacy policy live at GitHub Pages
+- [x] Terms of service live at GitHub Pages
+- [x] Store listing content written (see PUBLISHING_GUIDE.md)
+- [x] Data safety form answers documented
+- [x] Content rating answers documented
 
 ## What You Need To Do
 
-### Step 1: Host the Privacy Policy -- DONE
-- Privacy policy is live at: https://koller31.github.io/stakk-app/privacy-policy.html
-- Source repo: https://github.com/koller31/stakk-app
+### Step 1: Google Play Developer Account
+1. Go to https://play.google.com/console/signup
+2. Pay the $25 one-time fee
+3. Complete identity verification (takes 1-3 days)
 
-### Step 2: Create a Contact Email
-- Contact email: joek331@gmail.com
-- This goes in the Play Store listing and privacy policy
+### Step 2: Submit the App
+Use the `/play-store-submit` slash command in Claude Code to get step-by-step guidance through every Play Console form. Or read PUBLISHING_GUIDE.md for all the details.
 
-### Step 3: Take Screenshots on Your Samsung
-Install the release APK and take these screenshots (1080x1920 or similar):
-1. Lock screen / PIN entry
-2. Home screen with some cards
-3. Card detail view (front of an ID)
-4. Card scanner in action
-5. Store
-6. Settings screen
-(Minimum 2 required, recommend 4-6)
-
-### Step 4: Play Console Submission
-1. Go to https://play.google.com/console
-2. Create New App
-   - App name: Stakk
-   - Default language: English (US)
-   - App type: App (not game)
-   - Free
-3. Store Listing tab:
-   - Paste short description from store-listing.md
-   - Paste full description from store-listing.md
-   - Upload feature graphic (1024x500)
-   - Upload phone screenshots
-   - Upload app icon (512x512)
-4. Content Rating:
-   - Fill out IARC questionnaire
-   - Answer: No violence, no sexual content, no gambling, no drugs
-   - Expected rating: Everyone
-5. Data Safety:
-   - Follow responses in store-listing.md "Data Safety Responses" section
-   - Key answer: App does NOT collect or share data
-6. Target Audience:
-   - Select: 18+
-   - Not designed for children
-7. App Release:
-   - Upload the APK from: Stakk/build/app/outputs/flutter-apk/app-release.apk
-   - OR use App Bundle: Stakk/build/app/outputs/bundle/release/app-release.aab
-8. Review and Publish
-
-### Step 5: Wait for Review
-- Google typically reviews in 1-7 days for new accounts
-- May take longer for first submission
+### Step 3: Closed Testing (14 days required for new accounts)
+1. Recruit 12 people to be testers
+2. Add their Gmail addresses in Play Console
+3. They install the app and use it for 14 days
+4. After 14 days, promote to production
 
 ## Important Notes
-- Keystore password: idswipe2026 (change this if you want more security)
 - Keystore location: android/upload-keystore.jks
+- Key config: android/key.properties
 - NEVER lose the keystore -- you cannot update the app without it
-- Consider backing up the keystore to a secure location
-- The key.properties and .jks files are already in .gitignore
+- Both files are gitignored (never pushed to GitHub)
+- AAB location: build/app/outputs/bundle/release/app-release.aab

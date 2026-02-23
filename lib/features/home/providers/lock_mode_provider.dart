@@ -11,7 +11,21 @@ class LockModeProvider extends ChangeNotifier {
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   static const String _pinKey = 'traffic_lock_pin';
-  static const String _hashVersionPrefix = 'v1:';
+  static const String _hashV1Prefix = 'v1:'; // Legacy SHA-256
+  static const String _hashV2Prefix = 'v2:'; // PBKDF2-HMAC-SHA256
+
+  // PBKDF2 parameters (match AuthService)
+  static const int _pbkdf2Iterations = 100000;
+  static const int _saltLength = 16;
+  static const int _hashLength = 32;
+
+  // Brute-force lockout
+  static const String _failedAttemptsKey = 'traffic_lock_failed_attempts';
+  static const String _lockoutUntilKey = 'traffic_lock_lockout_until';
+  static const int _maxAttempts = 5;
+  static const int _lockoutSeconds = 30;
+  static const int _maxAttemptsExtended = 10;
+  static const int _extendedLockoutSeconds = 300;
 
   bool get isLocked => _isLocked;
   bool get isLockModeActive => _isLocked;
@@ -56,9 +70,9 @@ class LockModeProvider extends ChangeNotifier {
 
   Future<void> _setHashedPin(String pin) async {
     final salt = _generateSalt();
-    final hash = _hashPin(pin, salt);
+    final hash = _pbkdf2(pin, salt);
     final stored =
-        '$_hashVersionPrefix${base64Encode(salt)}:${base64Encode(hash)}';
+        '$_hashV2Prefix${base64Encode(salt)}:${base64Encode(hash)}';
     await _secureStorage.write(key: _pinKey, value: stored);
   }
 
@@ -68,26 +82,71 @@ class LockModeProvider extends ChangeNotifier {
     throw UnimplementedError('Use validatePinAsync instead');
   }
 
+  /// Check if traffic lock PIN is currently locked out.
+  Future<int?> getLockoutRemainingSeconds() async {
+    try {
+      final lockoutStr = await _secureStorage.read(key: _lockoutUntilKey);
+      if (lockoutStr == null) return null;
+      final lockoutUntil = DateTime.tryParse(lockoutStr);
+      if (lockoutUntil == null) return null;
+      final remaining = lockoutUntil.difference(DateTime.now()).inSeconds;
+      // Guard against clock manipulation: if lockout is more than 10 min in future, treat as expired
+      if (remaining > _extendedLockoutSeconds + 60) {
+        await _secureStorage.delete(key: _lockoutUntilKey);
+        return null;
+      }
+      if (remaining <= 0) {
+        await _secureStorage.delete(key: _lockoutUntilKey);
+        return null;
+      }
+      return remaining;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> validatePinAsync(String attemptedPin) async {
+    // Check lockout first
+    final lockout = await getLockoutRemainingSeconds();
+    if (lockout != null && lockout > 0) return false;
+
     final stored = await _secureStorage.read(key: _pinKey);
     if (stored == null) return false;
 
-    if (stored.startsWith(_hashVersionPrefix)) {
-      final parts = stored.substring(_hashVersionPrefix.length).split(':');
+    bool isValid = false;
+
+    if (stored.startsWith(_hashV2Prefix)) {
+      // v2: PBKDF2
+      final parts = stored.substring(_hashV2Prefix.length).split(':');
       if (parts.length != 2) return false;
       final salt = base64Decode(parts[0]);
       final storedHash = base64Decode(parts[1]);
-      final computedHash = _hashPin(attemptedPin, salt);
-      return _constantTimeEquals(storedHash, computedHash);
+      final computedHash = _pbkdf2(attemptedPin, salt);
+      isValid = _constantTimeEquals(storedHash, computedHash);
+    } else if (stored.startsWith(_hashV1Prefix)) {
+      // v1: legacy SHA-256
+      final parts = stored.substring(_hashV1Prefix.length).split(':');
+      if (parts.length != 2) return false;
+      final salt = base64Decode(parts[0]);
+      final storedHash = base64Decode(parts[1]);
+      final computedHash = _hashPinSha256(attemptedPin, salt);
+      isValid = _constantTimeEquals(storedHash, computedHash);
+    } else {
+      // Legacy plaintext
+      isValid = stored == attemptedPin;
     }
 
-    // Legacy plaintext - compare and upgrade
-    if (stored == attemptedPin) {
-      await _setHashedPin(attemptedPin);
-      debugPrint('Traffic lock PIN auto-upgraded to hashed format');
-      return true;
+    if (isValid) {
+      // Auto-upgrade to v2 if not already
+      if (!stored.startsWith(_hashV2Prefix)) {
+        await _setHashedPin(attemptedPin);
+      }
+      await _resetFailedAttempts();
+    } else {
+      await _recordFailedAttempt();
     }
-    return false;
+
+    return isValid;
   }
 
   Future<bool> enableLockMode() async {
@@ -117,14 +176,72 @@ class LockModeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _recordFailedAttempt() async {
+    try {
+      final str = await _secureStorage.read(key: _failedAttemptsKey);
+      final count = (str != null ? (int.tryParse(str) ?? 0) : 0) + 1;
+      await _secureStorage.write(key: _failedAttemptsKey, value: count.toString());
+
+      if (count >= _maxAttemptsExtended) {
+        final until = DateTime.now().add(const Duration(seconds: _extendedLockoutSeconds));
+        await _secureStorage.write(key: _lockoutUntilKey, value: until.toIso8601String());
+      } else if (count >= _maxAttempts) {
+        final until = DateTime.now().add(const Duration(seconds: _lockoutSeconds));
+        await _secureStorage.write(key: _lockoutUntilKey, value: until.toIso8601String());
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _resetFailedAttempts() async {
+    try {
+      await _secureStorage.delete(key: _failedAttemptsKey);
+      await _secureStorage.delete(key: _lockoutUntilKey);
+    } catch (_) {}
+  }
+
   Uint8List _generateSalt() {
     final random = Random.secure();
     return Uint8List.fromList(
-      List<int>.generate(16, (_) => random.nextInt(256)),
+      List<int>.generate(_saltLength, (_) => random.nextInt(256)),
     );
   }
 
-  Uint8List _hashPin(String pin, Uint8List salt) {
+  /// PBKDF2-HMAC-SHA256 key derivation (matches AuthService).
+  Uint8List _pbkdf2(String pin, Uint8List salt) {
+    final pinBytes = utf8.encode(pin);
+    final hmacSha256 = Hmac(sha256, pinBytes);
+
+    final derivedKey = Uint8List(_hashLength);
+    final blockCount = (_hashLength / 32).ceil();
+
+    for (int block = 1; block <= blockCount; block++) {
+      final saltBlock = Uint8List(salt.length + 4);
+      saltBlock.setAll(0, salt);
+      saltBlock[salt.length] = (block >> 24) & 0xFF;
+      saltBlock[salt.length + 1] = (block >> 16) & 0xFF;
+      saltBlock[salt.length + 2] = (block >> 8) & 0xFF;
+      saltBlock[salt.length + 3] = block & 0xFF;
+
+      var u = Uint8List.fromList(hmacSha256.convert(saltBlock).bytes);
+      final result = Uint8List.fromList(u);
+
+      for (int i = 1; i < _pbkdf2Iterations; i++) {
+        u = Uint8List.fromList(hmacSha256.convert(u).bytes);
+        for (int j = 0; j < result.length; j++) {
+          result[j] ^= u[j];
+        }
+      }
+
+      final offset = (block - 1) * 32;
+      final copyLen = min(_hashLength - offset, 32);
+      derivedKey.setRange(offset, offset + copyLen, result);
+    }
+
+    return derivedKey;
+  }
+
+  /// Legacy SHA-256 hash (for verifying v1 PINs before upgrade).
+  Uint8List _hashPinSha256(String pin, Uint8List salt) {
     final pinBytes = utf8.encode(pin);
     final combined = Uint8List(salt.length + pinBytes.length);
     combined.setAll(0, salt);

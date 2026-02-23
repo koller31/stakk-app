@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../data/models/card_category.dart';
 import '../../../data/models/wallet_card_model.dart';
 import '../../../data/services/card_category_service.dart';
@@ -269,6 +270,149 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
     );
   }
 
+  /// Open bottom sheet to reorder category types
+  void _showReorderCategoriesSheet(BuildContext context) {
+    // Start with all categories that have cards (the ones visible in carousel)
+    final reorderList = List<CardCategory>.from(_nonEmptyCategories);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.elevatedSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.tertiaryText,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Reorder Categories',
+                          style: TextStyle(
+                            color: AppColors.primaryText,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () async {
+                            // Save the new order
+                            await _categoryService.reorderCategories(reorderList);
+                            if (context.mounted) {
+                              Navigator.pop(sheetContext);
+                              _loadCategories();
+                            }
+                          },
+                          child: Text(
+                            'Done',
+                            style: TextStyle(
+                              color: AppColors.primaryAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Drag to reorder how card types appear in your carousel',
+                      style: TextStyle(
+                        color: AppColors.secondaryText,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Reorderable list
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.45,
+                    ),
+                    child: ReorderableListView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      itemCount: reorderList.length,
+                      onReorder: (oldIndex, newIndex) {
+                        setSheetState(() {
+                          if (newIndex > oldIndex) newIndex--;
+                          final item = reorderList.removeAt(oldIndex);
+                          reorderList.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final cat = reorderList[index];
+                        final icon = CardCategoryMetadata.getIcon(cat);
+                        final name = CardCategoryMetadata.getDisplayName(cat);
+                        final count = (_groupedCards[cat] ?? []).length;
+
+                        return Card(
+                          key: ValueKey(cat),
+                          color: AppColors.secondaryBackground,
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.drag_handle,
+                              color: AppColors.tertiaryText,
+                            ),
+                            title: Row(
+                              children: [
+                                Text(icon, style: const TextStyle(fontSize: 20)),
+                                const SizedBox(width: 10),
+                                Text(
+                                  name,
+                                  style: TextStyle(
+                                    color: AppColors.primaryText,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: Text(
+                              '$count cards',
+                              style: TextStyle(
+                                color: AppColors.secondaryText,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   /// Build the fixed category title row
   Widget _buildCategoryTitle(BuildContext context) {
     // On the "Add Card" page, show no title
@@ -285,10 +429,10 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
       padding: const EdgeInsets.only(
         top: AppTheme.spacingSm,
         left: AppTheme.spacingMd,
+        right: AppTheme.spacingSm,
         bottom: 4,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text(categoryIcon, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 8),
@@ -302,9 +446,20 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
           Text(
             '($cardCount)',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+                  color: AppColors.tertiaryText,
                 ),
           ),
+          const Spacer(),
+          // Reorder categories button
+          if (_nonEmptyCategories.length > 1)
+            GestureDetector(
+              onTap: () => _showReorderCategoriesSheet(context),
+              child: Icon(
+                Icons.swap_vert,
+                size: 22,
+                color: AppColors.secondaryText,
+              ),
+            ),
         ],
       ),
     );

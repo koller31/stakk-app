@@ -2,6 +2,9 @@
 
 Everything you need to publish Stakk on Google Play, organized as step-by-step instructions.
 
+**Last updated**: February 20, 2026
+**Security audit**: Passed (30 vulnerabilities found and fixed, commit fee30ec)
+
 ---
 
 ## PREREQUISITES
@@ -49,11 +52,13 @@ MILITARY-GRADE SECURITY
 Your cards contain sensitive information, and Stakk treats them that way:
 - AES-256-GCM encryption for every card image
 - Encrypted local database for all card details
-- PIN + fingerprint/face authentication
+- PIN + fingerprint/face authentication with brute-force lockout
 - Auto-lock after configurable timeout
 - Screenshot blocking (screen capture disabled inside the app)
 - Secure deletion (files overwritten before removal)
 - Hardware-backed encryption keys via Android Keystore
+- HTTPS-only network policy
+- NFC credential auto-expiry
 
 100% OFFLINE & PRIVATE
 Stakk has no servers, no cloud sync, no accounts to create, no analytics, no tracking, and no ads. Your data never leaves your device. Period.
@@ -95,18 +100,16 @@ Your wallet, simplified. Your privacy, protected.
 ## GRAPHICS & ASSETS
 
 ### App Icon (512 x 512 px PNG)
-- Located at: `C:\Users\josep\IDswipe\store-assets\app-icon-512.png`
-- **NOTE**: Needs to be regenerated with "Stakk" branding (currently says "ID")
+- Located at: `C:\Users\josep\Stakk-master\store-assets\stakk-icon-512.png`
 - Upload as full square -- Google applies rounded mask automatically
 - Max file size: 1 MB
 
 ### Feature Graphic (1024 x 500 px)
-- Located at: `C:\Users\josep\IDswipe\store-assets\feature-graphic.png`
-- **NOTE**: Needs to be regenerated with "Stakk" branding (currently says "IDswipe")
+- Located at: `C:\Users\josep\Stakk-master\store-assets\feature-graphic.png`
 
 ### Screenshots (min 2, max 8)
-- Located at: `C:\Users\jose\IDswipe\store-assets\screenshots\`
-- 7 screenshots already captured
+- Located at: `C:\Users\josep\Stakk-master\store-assets\screenshots\`
+- 7 screenshots captured
 - Requirements: JPEG or PNG, 16:9 or 9:16 aspect ratio, min 320px, max 3840px per side
 
 ---
@@ -172,7 +175,7 @@ Answer these questions in Play Console:
 ### App Access
 - **Does the app require special access or login?**
 - Answer: **Yes** -- the app requires a PIN to access (set by the user on first launch)
-- **Instructions for reviewers**: "On first launch, create a 6-digit PIN (e.g., 123456). This PIN is required to access the app. You can optionally enable biometric authentication. To test features, use the camera to scan any card or ID."
+- **Instructions for reviewers**: "On first launch, create a 4-digit PIN (e.g., 1234). This PIN is required to access the app. You can optionally enable biometric authentication. To test features, use the camera to scan any card or ID, or import from gallery."
 
 ### Financial Features Declaration
 - **Does the app provide financial services?**: **No**
@@ -185,20 +188,24 @@ Answer these questions in Play Console:
 
 ## APP SIGNING & UPLOAD
 
-### Build the AAB
-The production AAB needs to be built on the master branch with Stakk branding applied.
-- Build command: `flutter build appbundle --release`
-- Output location: `build/app/outputs/bundle/release/app-release.aab`
+### Production AAB (READY)
+- Located at: `C:\Users\josep\Stakk-master\build\app\outputs\bundle\release\app-release.aab`
+- Size: ~113 MB
+- Signed with upload keystore
+- To rebuild: `flutter build appbundle --release` (from Stakk-master directory)
 
 ### App Signing
 - Google Play App Signing is required (Google manages your signing key)
 - You upload with your **upload key** (the keystore already generated)
-- Keystore location: `C:\Users\josep\IDswipe\upload-keystore.jks`
-- Alias: `upload`
+- Keystore location: `C:\Users\josep\Stakk-master\android\upload-keystore.jks`
+- Key alias: `upload`
+- Key config: `C:\Users\josep\Stakk-master\android\key.properties`
+- **NEVER lose the keystore** -- you cannot update the app without it
+- Both files are in .gitignore (never committed to GitHub)
 
 ### API Level
-- Current target: API 35 (Android 15) -- meets current Play Store requirement
-- API 36 (Android 16) required by August 2026
+- Current target: API 36 (Android 16) -- exceeds current Play Store requirement
+- compileSdk: 36
 
 ---
 
@@ -282,14 +289,16 @@ The production AAB needs to be built on the master branch with Stakk branding ap
 - [x] PRIVACY_POLICY.md
 - [x] TERMS_OF_SERVICE.md
 - [x] SECURITY.md
-- [x] Privacy policy HTML (GitHub Pages)
+- [x] Privacy policy HTML (GitHub Pages) -- verified live
 - [x] Terms of service HTML (GitHub Pages)
 - [x] Landing page HTML (GitHub Pages)
-- [ ] App icon with Stakk branding (512x512)
-- [ ] Feature graphic with Stakk branding (1024x500)
+- [x] App icon with Stakk branding (512x512)
+- [x] Feature graphic with Stakk branding (1024x500)
 - [x] Screenshots (7 captured)
-- [ ] Production AAB with Stakk branding
+- [x] Production AAB signed with upload key
+- [x] Upload keystore generated (android/upload-keystore.jks)
 - [x] Store listing content (in this guide)
 - [x] Data safety form answers (in this guide)
 - [x] Content rating answers (in this guide)
+- [x] Security audit passed (30 findings fixed)
 - [x] PUBLISHING_GUIDE.md (this file)

@@ -172,6 +172,12 @@ class EncryptionService {
     _cacheOrder.remove(path);
   }
 
+  /// Clear all cached decrypted images (call on lock to prevent heap exposure).
+  void clearCache() {
+    _imageCache.clear();
+    _cacheOrder.clear();
+  }
+
   /// Securely delete a file by overwriting with random bytes, then zeros, then deleting.
   Future<void> secureDelete(String filePath) async {
     try {
