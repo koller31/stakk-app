@@ -119,6 +119,9 @@ class EncryptionService {
     _cacheOrder.add(key);
   }
 
+  /// Synchronously check if bytes are already in the LRU cache.
+  Uint8List? getCachedBytes(String path) => _imageCache[path];
+
   /// Decrypt a file and return raw bytes. Results are cached in memory.
   Future<Uint8List> decryptFileToBytes(String encryptedPath) async {
     // Return cached if available

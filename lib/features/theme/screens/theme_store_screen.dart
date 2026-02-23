@@ -12,7 +12,6 @@ class ThemeStoreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final currentId = themeProvider.currentTheme.id;
-    final themes = themeProvider.allThemes;
 
     return Scaffold(
       backgroundColor: AppColors.primaryBackground,
@@ -29,51 +28,90 @@ class ThemeStoreScreen extends StatelessWidget {
         ),
         iconTheme: IconThemeData(color: AppColors.primaryText),
       ),
-      body: Padding(
+      body: ListView(
         padding: EdgeInsets.all(AppTheme.paddingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(
-                left: AppTheme.paddingSmall,
-                bottom: AppTheme.paddingSmall,
-                top: AppTheme.paddingSmall,
-              ),
-              child: Text(
-                'FREE THEMES',
-                style: TextStyle(
-                  color: AppColors.secondaryText,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.85,
-                ),
-                itemCount: themes.length,
-                itemBuilder: (context, index) {
-                  final theme = themes[index];
-                  final isActive = theme.id == currentId;
+        children: [
+          // Dark Themes section
+          _SectionHeader(title: 'DARK THEMES'),
+          _ThemeGrid(
+            themes: AppThemeModel.darkThemes,
+            currentId: currentId,
+            onSelect: (id) => themeProvider.setTheme(id),
+          ),
 
-                  return _ThemeCard(
-                    theme: theme,
-                    isActive: isActive,
-                    onTap: () => themeProvider.setTheme(theme.id),
-                  );
-                },
-              ),
-            ),
-          ],
+          const SizedBox(height: 24),
+
+          // Light Themes section
+          _SectionHeader(title: 'LIGHT THEMES'),
+          _ThemeGrid(
+            themes: AppThemeModel.lightThemes,
+            currentId: currentId,
+            onSelect: (id) => themeProvider.setTheme(id),
+          ),
+
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppTheme.paddingSmall,
+        bottom: AppTheme.paddingSmall,
+        top: AppTheme.paddingSmall,
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: AppColors.secondaryText,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+}
+
+class _ThemeGrid extends StatelessWidget {
+  final List<AppThemeModel> themes;
+  final String currentId;
+  final ValueChanged<String> onSelect;
+
+  const _ThemeGrid({
+    required this.themes,
+    required this.currentId,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: themes.length,
+      itemBuilder: (context, index) {
+        final theme = themes[index];
+        return _ThemeCard(
+          theme: theme,
+          isActive: theme.id == currentId,
+          onTap: () => onSelect(theme.id),
+        );
+      },
     );
   }
 }
@@ -91,6 +129,11 @@ class _ThemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Card border for the preview - use theme's own colors for contrast
+    final previewBorderColor = theme.isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.08);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -115,6 +158,7 @@ class _ThemeCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: theme.primaryBackground,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: previewBorderColor, width: 1),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -142,11 +186,23 @@ class _ThemeCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _Swatch(color: theme.primaryAccent, size: 24),
+                        _Swatch(
+                          color: theme.primaryAccent,
+                          size: 24,
+                          isDark: theme.isDark,
+                        ),
                         const SizedBox(width: 6),
-                        _Swatch(color: theme.secondaryBackground, size: 24),
+                        _Swatch(
+                          color: theme.secondaryBackground,
+                          size: 24,
+                          isDark: theme.isDark,
+                        ),
                         const SizedBox(width: 6),
-                        _Swatch(color: theme.elevatedSurface, size: 24),
+                        _Swatch(
+                          color: theme.elevatedSurface,
+                          size: 24,
+                          isDark: theme.isDark,
+                        ),
                       ],
                     ),
                   ],
@@ -200,8 +256,13 @@ class _ThemeCard extends StatelessWidget {
 class _Swatch extends StatelessWidget {
   final Color color;
   final double size;
+  final bool isDark;
 
-  const _Swatch({required this.color, required this.size});
+  const _Swatch({
+    required this.color,
+    required this.size,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +273,9 @@ class _Swatch extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white.withOpacity(0.15),
+          color: isDark
+              ? Colors.white.withOpacity(0.15)
+              : Colors.black.withOpacity(0.1),
           width: 1,
         ),
       ),

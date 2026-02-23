@@ -6,16 +6,11 @@ import '../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'pin_entry_screen.dart';
 
-/// Lock Screen - Main entry point for authentication
+/// Splash / Lock Screen - Entry point every time the app opens.
 ///
-/// Displays on:
-/// - App startup
-/// - Resume from background
-///
-/// Handles:
-/// - First-time PIN setup
-/// - Biometric authentication
-/// - PIN entry for unlock
+/// Displays the Stakk app icon on a clean dark background.
+/// Thumbprint auth triggers here; image pre-warming runs in the
+/// background (driven by HomeProvider in main.dart).
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
 
@@ -23,15 +18,37 @@ class LockScreen extends StatefulWidget {
   State<LockScreen> createState() => _LockScreenState();
 }
 
-class _LockScreenState extends State<LockScreen> {
+class _LockScreenState extends State<LockScreen>
+    with SingleTickerProviderStateMixin {
   bool _isInitialized = false;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
 
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Subtle fade-in for the icon
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    );
+    _fadeController.forward();
+
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
   }
 
   Future<void> _initialize() async {
@@ -40,6 +57,8 @@ class _LockScreenState extends State<LockScreen> {
     // Check biometric availability
     _biometricAvailable = await authProvider.hasBiometrics();
     _biometricEnabled = await authProvider.isBiometricEnabled();
+
+    if (!mounted) return;
 
     setState(() {
       _isInitialized = true;
@@ -180,100 +199,112 @@ class _LockScreenState extends State<LockScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    if (!_isInitialized || authProvider.isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.primaryBackground,
-        body: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primaryAccent,
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppColors.primaryBackground,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacingLg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 3),
 
-              // App logo and lock icon
-              Icon(
-                Icons.lock_outline,
-                size: 80,
-                color: AppColors.primaryAccent,
-              ),
-
-              const SizedBox(height: AppTheme.spacingXl),
-
-              // App name
-              Text(
-                'Stakk',
-                style: AppTheme.textTheme.displayMedium?.copyWith(
-                  color: AppColors.primaryText,
-                  fontSize: 36,
-                ),
-              ),
-
-              const SizedBox(height: AppTheme.spacingSm),
-
-              // Subtitle
-              Text(
-                authProvider.isFirstLaunch
-                    ? 'Welcome! Set up your security PIN'
-                    : 'Unlock to continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.secondaryText,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const Spacer(flex: 3),
-
-              // Unlock button
-              ElevatedButton(
-                onPressed: _handlePinEntry,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 48,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                // App icon - always visible immediately (no spinner)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: Image.asset(
+                    'assets/App Icon/stakk-icon-512.png',
+                    width: 140,
+                    height: 140,
+                    filterQuality: FilterQuality.medium,
                   ),
                 ),
-                child: Text(
-                  authProvider.isFirstLaunch ? 'Get Started' : 'Unlock',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+
+                const SizedBox(height: 24),
+
+                // App name
+                Text(
+                  'Stakk',
+                  style: AppTheme.textTheme.displayMedium?.copyWith(
+                    color: AppColors.primaryText,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: AppTheme.spacingLg),
+                const SizedBox(height: 8),
 
-              // Biometric button (if available and not first launch)
-              if (!authProvider.isFirstLaunch && _biometricAvailable)
-                IconButton(
-                  onPressed: () => _tryBiometricAuth(force: true),
-                  icon: Icon(
-                    Icons.fingerprint,
-                    size: 48,
-                    color: AppColors.primaryAccent,
+                // Subtitle - only show once initialized
+                if (_isInitialized && !authProvider.isLoading)
+                  Text(
+                    authProvider.isFirstLaunch
+                        ? 'Set up your security PIN'
+                        : 'Unlock to continue',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.secondaryText,
+                    ),
                   ),
-                  tooltip: 'Use biometric authentication',
-                ),
 
-              const Spacer(flex: 2),
-            ],
+                const Spacer(flex: 2),
+
+                // Auth controls - show once initialized
+                if (_isInitialized && !authProvider.isLoading) ...[
+                  // Biometric button (if available and not first launch)
+                  if (!authProvider.isFirstLaunch && _biometricAvailable)
+                    GestureDetector(
+                      onTap: () => _tryBiometricAuth(force: true),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primaryAccent.withOpacity(0.4),
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.fingerprint,
+                              size: 40,
+                              color: AppColors.primaryAccent,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tap to unlock',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.secondaryText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 20),
+
+                  // PIN / Get Started button
+                  TextButton(
+                    onPressed: _handlePinEntry,
+                    child: Text(
+                      authProvider.isFirstLaunch ? 'Get Started' : 'Use PIN',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.primaryAccent,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+
+                const Spacer(flex: 2),
+              ],
+            ),
           ),
         ),
       ),

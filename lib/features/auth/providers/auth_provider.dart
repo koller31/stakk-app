@@ -48,27 +48,10 @@ class AuthProvider extends ChangeNotifier {
       _hasPin = await _authService.hasPin();
       _isFirstLaunch = !_hasPin;
 
-      // Check if there's an active session (survives activity recreation)
-      final sessionTs = await _storage.read(key: _sessionKey);
-      if (sessionTs != null && _hasPin) {
-        final sessionTime = DateTime.tryParse(sessionTs);
-        if (sessionTime != null &&
-            DateTime.now().difference(sessionTime).inSeconds < 30) {
-          _isAuthenticated = true;
-          _authStatus = AuthStatus.authenticated;
-          // Refresh the session timestamp
-          await _storage.write(
-              key: _sessionKey, value: DateTime.now().toIso8601String());
-          debugPrint('Auth restored from active session');
-        } else {
-          _isAuthenticated = false;
-          _authStatus = AuthStatus.unauthenticated;
-          await _storage.delete(key: _sessionKey);
-        }
-      } else {
-        _isAuthenticated = false;
-        _authStatus = AuthStatus.unauthenticated;
-      }
+      // Always require authentication on app start
+      _isAuthenticated = false;
+      _authStatus = AuthStatus.unauthenticated;
+      await _storage.delete(key: _sessionKey);
 
       // Cache biometric state
       _biometricsAvailable = await _authService.hasBiometrics();
@@ -166,13 +149,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Lock the app
-  Future<void> lock() async {
+  /// Lock the app (synchronous state change, storage cleanup in background)
+  void lock() {
     if (_isAuthenticated) {
       _isAuthenticated = false;
       _authStatus = AuthStatus.unauthenticated;
-      await _storage.delete(key: _sessionKey);
-      debugPrint('App locked');
+      _storage.delete(key: _sessionKey); // fire-and-forget
       notifyListeners();
     }
   }

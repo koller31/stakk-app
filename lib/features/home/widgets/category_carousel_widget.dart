@@ -9,6 +9,7 @@ import '../screens/expanded_category_screen.dart';
 import '../../auth/screens/pin_entry_screen.dart';
 import '../../card_scanner/screens/scan_card_screen.dart';
 import '../../business/screens/add_business_connection_screen.dart';
+import '../providers/home_provider.dart';
 import '../providers/lock_mode_provider.dart';
 import 'card_stack_widget.dart';
 import 'home_search_bar.dart';
@@ -67,6 +68,15 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
   @override
   void initState() {
     super.initState();
+
+    // Use HomeProvider's pre-computed categories for instant first render
+    final homeProvider = context.read<HomeProvider>();
+    if (homeProvider.sortedCategories.isNotEmpty) {
+      _sortedCategories = homeProvider.sortedCategories;
+      _groupedCards = homeProvider.groupedCards;
+      _recomputeCategories();
+    }
+
     _loadCategories();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_nonEmptyCategories.isNotEmpty) {
@@ -405,6 +415,12 @@ class _CategoryCarouselWidgetState extends State<CategoryCarouselWidget> {
     int totalCards = 0;
     for (var cards in _groupedCards.values) {
       totalCards += cards.length;
+    }
+
+    // Show spinner while data is still loading (don't flash "Add Card")
+    final homeProvider = context.watch<HomeProvider>();
+    if (totalCards == 0 && (homeProvider.isLoading || homeProvider.cards.isNotEmpty)) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     // No cards - show single add button

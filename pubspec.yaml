@@ -115,6 +115,8 @@ flutter:
   assets:
     - assets/images/MockIDFront90.png
     - assets/images/MockIDBack90.png
+    - assets/demo_cards/
+    - assets/App Icon/stakk-icon-512.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -6,6 +6,7 @@ class AppThemeModel {
   final String description;
   final bool isPremium;
   final double price;
+  final bool isDark;
 
   final Color primaryBackground;
   final Color secondaryBackground;
@@ -21,6 +22,7 @@ class AppThemeModel {
     required this.description,
     this.isPremium = false,
     this.price = 0.0,
+    this.isDark = true,
     required this.primaryBackground,
     required this.secondaryBackground,
     required this.elevatedSurface,
@@ -31,7 +33,7 @@ class AppThemeModel {
   });
 
   // ============================================================================
-  // BUILT-IN THEMES
+  // DARK THEMES
   // ============================================================================
 
   static const midnightTeal = AppThemeModel(
@@ -73,9 +75,68 @@ class AppThemeModel {
     tertiaryText: Color(0xFF6B7F8F),
   );
 
+  // ============================================================================
+  // LIGHT THEMES
+  // ============================================================================
+
+  static const cleanWhite = AppThemeModel(
+    id: 'clean_white',
+    name: 'Clean White',
+    description: 'Crisp minimal light',
+    isDark: false,
+    primaryBackground: Color(0xFFF8F9FA),
+    secondaryBackground: Color(0xFFFFFFFF),
+    elevatedSurface: Color(0xFFFFFFFF),
+    primaryAccent: Color(0xFF14B8A6),
+    primaryText: Color(0xFF1A1A2E),
+    secondaryText: Color(0xFF6B7280),
+    tertiaryText: Color(0xFF9CA3AF),
+  );
+
+  static const softLavender = AppThemeModel(
+    id: 'soft_lavender',
+    name: 'Soft Lavender',
+    description: 'Gentle purple tones',
+    isDark: false,
+    primaryBackground: Color(0xFFF5F3FF),
+    secondaryBackground: Color(0xFFFFFFFF),
+    elevatedSurface: Color(0xFFFAF8FF),
+    primaryAccent: Color(0xFF8B5CF6),
+    primaryText: Color(0xFF1E1B4B),
+    secondaryText: Color(0xFF6B6B8F),
+    tertiaryText: Color(0xFFA0A0B8),
+  );
+
+  static const skyBlue = AppThemeModel(
+    id: 'sky_blue',
+    name: 'Sky Blue',
+    description: 'Fresh open-air feel',
+    isDark: false,
+    primaryBackground: Color(0xFFF0F9FF),
+    secondaryBackground: Color(0xFFFFFFFF),
+    elevatedSurface: Color(0xFFF8FCFF),
+    primaryAccent: Color(0xFF0284C7),
+    primaryText: Color(0xFF0C1929),
+    secondaryText: Color(0xFF64748B),
+    tertiaryText: Color(0xFF94A3B8),
+  );
+
+  // ============================================================================
+  // ALL THEMES
+  // ============================================================================
+
   static const List<AppThemeModel> builtInThemes = [
     midnightTeal,
     sunsetPurple,
     oceanBlue,
+    cleanWhite,
+    softLavender,
+    skyBlue,
   ];
+
+  static List<AppThemeModel> get darkThemes =>
+      builtInThemes.where((t) => t.isDark).toList();
+
+  static List<AppThemeModel> get lightThemes =>
+      builtInThemes.where((t) => !t.isDark).toList();
 }

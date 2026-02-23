@@ -188,35 +188,43 @@ class AppTheme {
       ];
 
   // ============================================================================
-  // DARK THEME CONFIGURATION
+  // THEME CONFIGURATION (adapts to current theme brightness)
   // ============================================================================
 
-  static ThemeData get darkTheme {
-    return ThemeData(
-      // Brightness
-      brightness: Brightness.dark,
-      useMaterial3: true,
+  /// Returns the correct ThemeData based on the current theme's brightness.
+  static ThemeData get currentThemeData {
+    final isDark = AppColors.isDark;
+    final brightness = isDark ? Brightness.dark : Brightness.light;
 
-      // Font family
+    return ThemeData(
+      brightness: brightness,
+      useMaterial3: true,
       fontFamily: fontFamily,
 
-      // Color scheme
-      colorScheme: ColorScheme.dark(
-        primary: AppColors.primaryAccent,
-        secondary: AppColors.brandPrimary,
-        surface: AppColors.secondaryBackground,
-        error: AppColors.errorRed,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        onSurface: AppColors.primaryText,
-        onError: Colors.white,
-        brightness: Brightness.dark,
-      ),
+      colorScheme: isDark
+          ? ColorScheme.dark(
+              primary: AppColors.primaryAccent,
+              secondary: AppColors.brandPrimary,
+              surface: AppColors.secondaryBackground,
+              error: AppColors.errorRed,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              onSurface: AppColors.primaryText,
+              onError: Colors.white,
+            )
+          : ColorScheme.light(
+              primary: AppColors.primaryAccent,
+              secondary: AppColors.brandPrimary,
+              surface: AppColors.secondaryBackground,
+              error: AppColors.errorRed,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              onSurface: AppColors.primaryText,
+              onError: Colors.white,
+            ),
 
-      // Scaffold
       scaffoldBackgroundColor: AppColors.primaryBackground,
 
-      // App bar
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primaryBackground,
         elevation: 0,
@@ -231,37 +239,31 @@ class AppTheme {
           color: AppColors.primaryText,
           size: 24,
         ),
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
       ),
 
-      // Text theme
       textTheme: textTheme,
 
-      // Button themes
       elevatedButtonTheme: _elevatedButtonTheme,
       outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
 
-      // Card theme
       cardTheme: _cardTheme,
-
-      // Input decoration
       inputDecorationTheme: _inputDecorationTheme,
 
-      // Icon theme
       iconTheme: IconThemeData(
         color: AppColors.primaryText,
         size: 24,
       ),
 
-      // Divider theme
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.divider,
         thickness: 1,
         space: 1,
       ),
 
-      // Bottom sheet theme
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.elevatedSurface,
         shape: const RoundedRectangleBorder(
@@ -269,30 +271,28 @@ class AppTheme {
             top: Radius.circular(borderRadiusXl),
           ),
         ),
-        elevation: 0,
+        elevation: isDark ? 0 : 4,
       ),
 
-      // Dialog theme
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.elevatedSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadiusLg),
         ),
-        elevation: 0,
+        elevation: isDark ? 0 : 4,
       ),
 
-      // Chip theme
       chipTheme: _chipTheme,
-
-      // Switch theme
       switchTheme: _switchTheme,
 
-      // Progress indicator theme
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: AppColors.primaryAccent,
       ),
     );
   }
+
+  /// Backward compat alias
+  static ThemeData get darkTheme => currentThemeData;
 
   // ============================================================================
   // BUTTON THEMES
@@ -329,7 +329,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
-        side: const BorderSide(
+        side: BorderSide(
           color: AppColors.subtleBorder,
           width: 1,
         ),
@@ -367,7 +367,7 @@ class AppTheme {
       shadowColor: Colors.black.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadiusMd),
-        side: const BorderSide(
+        side: BorderSide(
           color: AppColors.subtleBorder,
           width: 1,
         ),
@@ -387,14 +387,14 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadiusMd),
-        borderSide: const BorderSide(
+        borderSide: BorderSide(
           color: AppColors.subtleBorder,
           width: 1,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadiusMd),
-        borderSide: const BorderSide(
+        borderSide: BorderSide(
           color: AppColors.subtleBorder,
           width: 1,
         ),

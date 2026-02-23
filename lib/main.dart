@@ -4,11 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Core
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_colors.dart';
 import 'core/services/migration_service.dart';
+import 'core/services/demo_card_seeder.dart';
 import 'core/services/device_security_service.dart';
 import 'core/services/auto_lock_service.dart';
 
@@ -28,35 +30,29 @@ import 'core/router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive for wallet cards storage
-  await Hive.initFlutter();
-
-  // Register Hive type adapters
-  Hive.registerAdapter(WalletCardModelAdapter());
-  Hive.registerAdapter(BusinessConnectionModelAdapter());
-
-  // Run data migrations (encrypts DB + images for existing users)
-  await MigrationService().runMigrations();
-
-  // Clean up stale temp files from cancelled scans
-  _cleanupTempFiles();
-
-  // Lock orientation to portrait only
+  // Lock orientation + system UI (instant, no I/O)
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
-  // Set system UI overlay style for dark theme
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.black,
+      systemNavigationBarColor: Color(0xFF0A0A0F),
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
 
+  // Initialize Hive (required before any box can open)
+  await Hive.initFlutter();
+  Hive.registerAdapter(WalletCardModelAdapter());
+  Hive.registerAdapter(BusinessConnectionModelAdapter());
+
+  // Run data migrations (must complete before boxes open)
+  await MigrationService().runMigrations();
+
+  // Launch UI immediately - remaining init runs in background
   runApp(const IDswipeApp());
 }
 
@@ -67,7 +63,6 @@ Future<void> _cleanupTempFiles() async {
     final files = tempDir.listSync();
     for (final entity in files) {
       if (entity is File && entity.path.endsWith('.jpg')) {
-        // Only delete files older than 1 hour to avoid deleting active scans
         final stat = await entity.stat();
         if (DateTime.now().difference(stat.modified).inHours >= 1) {
           await entity.delete();
@@ -88,16 +83,36 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
   final AutoLockService _autoLockService = AutoLockService();
   bool _deviceSecurityChecked = false;
 
+  // Created here so lifecycle callbacks can access them directly
+  // (the widget's own context is above the MultiProvider, so Provider.of fails)
+  late final AuthProvider _authProvider;
+  late final HomeProvider _homeProvider;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _autoLockService.init();
+    _authProvider = AuthProvider()..init();
+    _homeProvider = HomeProvider();
+
+    // Run deferred init: seed demo cards, pre-warm SharedPreferences,
+    // then load card data - all after the first frame renders
+    _deferredInit();
+  }
+
+  Future<void> _deferredInit() async {
+    await DemoCardSeeder().seedIfEmpty();
+    await SharedPreferences.getInstance();
+    _homeProvider.loadData();
+    _cleanupTempFiles(); // fire-and-forget
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _authProvider.dispose();
+    _homeProvider.dispose();
     super.dispose();
   }
 
@@ -106,26 +121,19 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused) {
       _autoLockService.recordPause();
     } else if (state == AppLifecycleState.resumed) {
-      _checkAutoLock();
-    }
-  }
-
-  Future<void> _checkAutoLock() async {
-    final shouldLock = await _autoLockService.shouldLockOnResume();
-    if (shouldLock && mounted) {
-      // Get the auth provider and lock the app
-      try {
-        final authProvider =
-            Provider.of<AuthProvider>(context, listen: false);
-        await authProvider.lock();
-      } catch (_) {}
+      // Lock synchronously BEFORE the next frame renders,
+      // so the router never briefly shows /home
+      final shouldLock = _autoLockService.shouldLockOnResume();
+      if (shouldLock) {
+        _authProvider.lock();
+      }
+      _homeProvider.reWarmImageCache();
     }
   }
 
   void _checkDeviceSecurity(BuildContext context) {
     if (_deviceSecurityChecked) return;
     _deviceSecurityChecked = true;
-    // Run device security check after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DeviceSecurityService().checkAndWarn(context);
     });
@@ -136,14 +144,10 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         // Authentication Provider (must be first for routing)
-        ChangeNotifierProvider<AuthProvider>(
-          create: (context) => AuthProvider()..init(),
-        ),
+        ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
 
-        // Home Provider (card management)
-        ChangeNotifierProvider<HomeProvider>(
-          create: (context) => HomeProvider(),
-        ),
+        // Home Provider (card management) - loads after deferred init
+        ChangeNotifierProvider<HomeProvider>.value(value: _homeProvider),
 
         // Lock Mode Provider (traffic document lock)
         ChangeNotifierProvider<LockModeProvider>(
@@ -165,9 +169,20 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
           // Reactively apply theme when provider changes
           AppColors.applyTheme(themeProvider.currentTheme);
 
-          final authProvider =
-              Provider.of<AuthProvider>(context, listen: false);
-          final appRouter = AppRouter(authProvider);
+          // Update system UI to match theme brightness
+          final isDark = themeProvider.currentTheme.isDark;
+          SystemChrome.setSystemUIOverlayStyle(
+            SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness:
+                  isDark ? Brightness.light : Brightness.dark,
+              systemNavigationBarColor: AppColors.primaryBackground,
+              systemNavigationBarIconBrightness:
+                  isDark ? Brightness.light : Brightness.dark,
+            ),
+          );
+
+          final appRouter = AppRouter(_authProvider);
 
           // Check device security after auth is ready
           final authStatus =
@@ -179,8 +194,7 @@ class _IDswipeAppState extends State<IDswipeApp> with WidgetsBindingObserver {
           return MaterialApp.router(
             title: 'Stakk',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.darkTheme,
-            themeMode: ThemeMode.dark,
+            theme: AppTheme.currentThemeData,
             routerConfig: appRouter.router,
           );
         },

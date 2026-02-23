@@ -28,7 +28,15 @@ class _EncryptedImageState extends State<EncryptedImage> {
   @override
   void initState() {
     super.initState();
-    _loadImage();
+    // Check cache synchronously first — avoids the async gap that causes
+    // a one-frame spinner flash when bytes are already pre-warmed.
+    final cached = EncryptionService().getCachedBytes(widget.path);
+    if (cached != null) {
+      _bytes = cached;
+      _isLoading = false;
+    } else {
+      _loadImage();
+    }
   }
 
   @override

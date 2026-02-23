@@ -12,7 +12,7 @@ class AutoLockService {
   static const String _timeoutKey = 'auto_lock_timeout_seconds';
 
   DateTime? _pausedAt;
-  int _timeoutSeconds = 60; // Default: 1 minute
+  int _timeoutSeconds = 0; // Default: Immediately
 
   /// Grace period: suppresses auto-lock until this time.
   /// Used when launching intents that background the app (image picker, OAuth, camera).
@@ -26,6 +26,7 @@ class AutoLockService {
 
   /// Available timeout options (in seconds).
   static const Map<int, String> timeoutOptions = {
+    0: 'Immediately',
     30: '30 seconds',
     60: '1 minute',
     300: '5 minutes',
@@ -38,7 +39,12 @@ class AutoLockService {
     try {
       final stored = await _secureStorage.read(key: _timeoutKey);
       if (stored != null) {
-        _timeoutSeconds = int.tryParse(stored) ?? 60;
+        _timeoutSeconds = int.tryParse(stored) ?? 0;
+      }
+      // Migrate: demo build stored -1 ("Never"), reset to secure default
+      if (_timeoutSeconds == -1) {
+        _timeoutSeconds = 0;
+        await _secureStorage.write(key: _timeoutKey, value: '0');
       }
     } catch (e) {
       debugPrint('AutoLockService init error: $e');
@@ -48,10 +54,11 @@ class AutoLockService {
   /// Record the time when app goes to background.
   void recordPause() {
     _pausedAt = DateTime.now();
+    debugPrint('AutoLock: recordPause at $_pausedAt');
   }
 
-  /// Check if the app should lock on resume.
-  Future<bool> shouldLockOnResume() async {
+  /// Check if the app should lock on resume (synchronous - all in-memory).
+  bool shouldLockOnResume() {
     // If within a grace period, don't lock
     if (_graceUntil != null && DateTime.now().isBefore(_graceUntil!)) {
       _pausedAt = null;
@@ -59,7 +66,7 @@ class AutoLockService {
     }
     _graceUntil = null;
 
-    if (_timeoutSeconds == -1) return false; // "Never" setting
+    if (_timeoutSeconds == -1) return false;
     if (_pausedAt == null) return false;
 
     final elapsed = DateTime.now().difference(_pausedAt!).inSeconds;

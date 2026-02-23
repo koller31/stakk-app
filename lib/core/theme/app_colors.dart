@@ -3,7 +3,7 @@ import '../../data/models/app_theme_model.dart';
 
 /// IDswipe Color System
 /// Supports dynamic theming via applyTheme()
-/// Dark theme optimized for Gen Z users (18-28 years old)
+/// Dark and light mode support
 
 class AppColors {
   // Private constructor to prevent instantiation
@@ -19,6 +19,9 @@ class AppColors {
   static void applyTheme(AppThemeModel theme) {
     _current = theme;
   }
+
+  /// Whether the current theme is dark
+  static bool get isDark => _current.isDark;
 
   // ============================================================================
   // DYNAMIC BACKGROUND COLORS
@@ -77,33 +80,36 @@ class AppColors {
   static const Color brandSecondary = Color(0xFF0EA5E9);
 
   // ============================================================================
-  // BORDER & DIVIDER COLORS
+  // BORDER & DIVIDER COLORS (brightness-aware)
   // ============================================================================
 
-  /// Subtle border - Low opacity white
-  static const Color subtleBorder = Color(0x1AFFFFFF);
+  /// Subtle border - adapts to theme brightness
+  static Color get subtleBorder =>
+      isDark ? const Color(0x1AFFFFFF) : const Color(0x1A000000);
 
   /// Divider color - Very subtle separator
-  static const Color divider = Color(0x0DFFFFFF);
+  static Color get divider =>
+      isDark ? const Color(0x0DFFFFFF) : const Color(0x0D000000);
 
   /// Focus border - Primary accent
   static Color get focusBorder => primaryAccent;
 
   // ============================================================================
-  // OVERLAY COLORS (derived from dynamic accent)
+  // OVERLAY COLORS (brightness-aware)
   // ============================================================================
 
   /// Modal backdrop
   static const Color modalBackdrop = Color(0x99000000);
 
-  /// Pressed state overlay - Low opacity accent
+  /// Pressed state overlay
   static Color get pressedOverlay => primaryAccent.withOpacity(0.05);
 
-  /// Selected state overlay - Medium opacity accent
+  /// Selected state overlay
   static Color get selectedOverlay => primaryAccent.withOpacity(0.1);
 
   /// Hover state overlay
-  static const Color hoverOverlay = Color(0x0DFFFFFF);
+  static Color get hoverOverlay =>
+      isDark ? const Color(0x0DFFFFFF) : const Color(0x0D000000);
 
   // ============================================================================
   // GRADIENT COLORS (derived from dynamic accent)

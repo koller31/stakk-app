@@ -37,8 +37,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Pre-populate from HomeProvider if data already loaded (pre-warmed during auth)
+    final homeProvider = context.read<HomeProvider>();
+    if (homeProvider.cards.isNotEmpty) {
+      _scannedCards = homeProvider.cards;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeProvider>().loadData();
+      if (context.read<HomeProvider>().cards.isEmpty) {
+        context.read<HomeProvider>().loadData();
+      }
       _loadScannedCards();
     });
   }
@@ -147,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('IDswipe'),
+          title: const Text('Stakk'),
           actions: [
             IconButton(
               icon: const Icon(Icons.palette_outlined),
@@ -165,7 +174,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
         body: CategoryCarouselWidget(
-          walletCards: _scannedCards,
+          walletCards: _scannedCards.isNotEmpty
+              ? _scannedCards
+              : context.watch<HomeProvider>().cards,
           onCardsChanged: _loadScannedCards,
           recentActivityKey: _recentActivityKey,
           onCardTap: _handleCardTap,
